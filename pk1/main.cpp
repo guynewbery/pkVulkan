@@ -1,3 +1,7 @@
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -27,6 +31,8 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
+
+#define IMGUI_ENABLED 0
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -65,6 +71,15 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
     }
+}
+
+static void checkVkResult(VkResult err)
+{
+    if (err == 0)
+        return;
+    fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+    if (err < 0)
+        abort();
 }
 
 struct QueueFamilyIndices {
@@ -141,7 +156,9 @@ public:
     void run() {
         initWindow();
         initVulkan();
+        initImGui();
         mainLoop();
+        cleanupImGui();
         cleanup();
     }
 
@@ -197,6 +214,8 @@ private:
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
 
+    VkDescriptorPool imguiDescriptorPool;
+
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
@@ -251,6 +270,111 @@ private:
         createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
+    }
+
+    void initImGui() {
+#if IMGUI_ENABLED
+        // Setup Dear ImGui context
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        ImGuiIO& io = ImGui::GetIO(); (void)io;
+        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+        //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+        // Setup Dear ImGui style
+        ImGui::StyleColorsDark();
+        //ImGui::StyleColorsClassic();
+
+        // Setup Platform/Renderer backends
+        ImGui_ImplGlfw_InitForVulkan(window, true);
+
+        std::array<VkDescriptorPoolSize, 11> imguiPoolSizes{};
+        imguiPoolSizes[0].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+        imguiPoolSizes[0].descriptorCount = 1000;
+        imguiPoolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        imguiPoolSizes[1].descriptorCount = 1000;
+        imguiPoolSizes[2].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+        imguiPoolSizes[2].descriptorCount = 1000;
+        imguiPoolSizes[3].type = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        imguiPoolSizes[3].descriptorCount = 1000;
+        imguiPoolSizes[4].type = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+        imguiPoolSizes[4].descriptorCount = 1000;
+        imguiPoolSizes[5].type = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+        imguiPoolSizes[5].descriptorCount = 1000;
+        imguiPoolSizes[6].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        imguiPoolSizes[6].descriptorCount = 1000;
+        imguiPoolSizes[7].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        imguiPoolSizes[7].descriptorCount = 1000;
+        imguiPoolSizes[8].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+        imguiPoolSizes[8].descriptorCount = 1000;
+        imguiPoolSizes[9].type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+        imguiPoolSizes[9].descriptorCount = 1000;
+        imguiPoolSizes[10].type = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        imguiPoolSizes[10].descriptorCount = 1000;
+
+        VkDescriptorPoolCreateInfo imguiPoolInfo = {};
+        imguiPoolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        imguiPoolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        imguiPoolInfo.maxSets = 1000 * static_cast<uint32_t>(imguiPoolSizes.size());
+        imguiPoolInfo.poolSizeCount = static_cast<uint32_t>(imguiPoolSizes.size());
+        imguiPoolInfo.pPoolSizes = imguiPoolSizes.data();
+
+        if (vkCreateDescriptorPool(device, &imguiPoolInfo, nullptr, &imguiDescriptorPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
+
+        ImGui_ImplVulkan_InitInfo init_info = {};
+        init_info.Instance = instance;
+        init_info.PhysicalDevice = physicalDevice;
+        init_info.Device = device;
+
+        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+        init_info.QueueFamily = indices.graphicsFamily.value();
+        init_info.Queue = graphicsQueue;
+        init_info.PipelineCache = VK_NULL_HANDLE;
+        init_info.DescriptorPool = imguiDescriptorPool;
+        init_info.Allocator = nullptr;
+        init_info.MinImageCount = 2;
+        init_info.ImageCount = static_cast<uint32_t>(swapChainImages.size());
+        init_info.CheckVkResultFn = checkVkResult;
+        ImGui_ImplVulkan_Init(&init_info, renderPassNO);
+
+        // Load Fonts
+        // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
+        // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
+        // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
+        // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
+        // - Read 'docs/FONTS.md' for more instructions and details.
+        // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
+        //io.Fonts->AddFontDefault();
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
+        //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
+        //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
+        //IM_ASSERT(font != NULL);
+
+        // Upload Fonts
+        {
+            VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+            ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
+
+            endSingleTimeCommands(commandBuffer);
+
+            ImGui_ImplVulkan_DestroyFontUploadObjects();
+        }
+#endif
+    }
+
+    void cleanupImGui() {
+#if IMGUI_ENABLED
+        vkDestroyDescriptorPool(device, imguiDescriptorPool, nullptr);
+
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+#endif
     }
 
     void mainLoop() {

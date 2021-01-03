@@ -155,6 +155,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Libraries\imgui-master\backends\imgui_impl_glfw.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\backends\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\imgui.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\imgui_demo.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\imgui_draw.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\imgui_tables.cpp" />
+    <ClCompile Include="..\..\Libraries\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
