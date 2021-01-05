@@ -88,7 +88,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -106,7 +106,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -142,7 +142,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -155,13 +155,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Libraries\imgui-master\backends\imgui_impl_glfw.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\backends\imgui_impl_vulkan.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\imgui.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\imgui_demo.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\imgui_draw.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\imgui_tables.cpp" />
-    <ClCompile Include="..\..\Libraries\imgui-master\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
