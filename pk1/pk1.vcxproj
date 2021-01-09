@@ -19,11 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="code\camera\camera.cpp" />
     <ClCompile Include="code\game.cpp" />
     <ClCompile Include="code\graphics\graphics.cpp" />
     <ClCompile Include="code\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="code\camera\camera.h" />
     <ClInclude Include="code\game.h" />
     <ClInclude Include="code\graphics\graphics.h" />
     <ClInclude Include="code\library_macros.h" />

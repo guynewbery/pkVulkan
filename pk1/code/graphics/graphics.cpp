@@ -3,8 +3,6 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
 #include <vk_mem_alloc.h>
@@ -17,7 +15,6 @@
 #include <fstream>
 #include <stdexcept>
 #include <algorithm>
-#include <chrono>
 #include <vector>
 #include <cstring>
 #include <cstdlib>
@@ -27,7 +24,8 @@
 #include <set>
 #include <unordered_map>
 
-static PkGraphicsWindow* s_pGraphicsWindow;
+static PkGraphicsWindow* s_pGraphicsWindow = nullptr;
+static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
 
 const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
@@ -1404,15 +1402,15 @@ public:
     }
 
     void updateUniformBuffer(uint32_t currentImage) {
-        static auto startTime = std::chrono::high_resolution_clock::now();
-
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+        float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
+        float aspectRatio = swapChainExtent.width / (float)swapChainExtent.height;
+        float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
+        float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
 
         UniformBufferObject ubo{};
-        ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        ubo.proj = glm::perspective(glm::radians(45.0f), swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 10.0f);
+        ubo.model = s_pGraphicsModelViewProjection->model;
+        ubo.view = s_pGraphicsModelViewProjection->view;
+        ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
         ubo.proj[1][1] *= -1;
 
         void* data;
@@ -1699,9 +1697,10 @@ public:
 
 HelloTriangleApplication app;
 
-void PkGraphicsInitialise(PkGraphicsWindow& rGraphicsWindow)
+void PkGraphicsInitialise(PkGraphicsWindow& rGraphicsWindow, PkGraphicsModelViewProjection& rModelViewProjection)
 {
     s_pGraphicsWindow = &rGraphicsWindow;
+    s_pGraphicsModelViewProjection = &rModelViewProjection;
     app.initVulkan();
 }
 
@@ -1709,6 +1708,8 @@ void PkGraphicsCleanup()
 {
     vkDeviceWaitIdle(app.device);
     app.cleanup();
+    s_pGraphicsModelViewProjection = nullptr;
+    s_pGraphicsWindow = nullptr;
 }
 
 void PkGraphicsRender()

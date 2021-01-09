@@ -7,6 +7,9 @@
     <Filter Include="code\graphics">
       <UniqueIdentifier>{4238882a-35e1-4061-9f70-ac24fe497aff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\camera">
+      <UniqueIdentifier>{664b8d12-4fc0-45cd-a074-f011ff1cc5ba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="code\main.cpp">
@@ -18,6 +21,9 @@
     <ClCompile Include="code\game.cpp">
       <Filter>code</Filter>
     </ClCompile>
+    <ClCompile Include="code\camera\camera.cpp">
+      <Filter>code\camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
@@ -28,6 +34,9 @@
     </ClInclude>
     <ClInclude Include="code\game.h">
       <Filter>code</Filter>
+    </ClInclude>
+    <ClInclude Include="code\camera\camera.h">
+      <Filter>code\camera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
