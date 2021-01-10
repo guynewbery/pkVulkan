@@ -9,6 +9,11 @@
 
 VkSurfaceKHR s_surface;
 
+VkSurfaceKHR pkGraphicsSurface_GetSurface()
+{
+    return s_surface;
+}
+
 void pkGraphicsSurface_Create(VkInstance instance)
 {
     if (glfwCreateWindowSurface(instance, pkGraphicsWindow_GetWindow(), nullptr, &s_surface) != VK_SUCCESS)
@@ -20,9 +25,4 @@ void pkGraphicsSurface_Create(VkInstance instance)
 void pkGraphicsSurface_Destroy(VkInstance instance)
 {
     vkDestroySurfaceKHR(instance, s_surface, nullptr);
-}
-
-VkSurfaceKHR pkGraphicsSurface_GetSurface()
-{
-    return s_surface;
 }

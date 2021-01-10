@@ -1,8 +1,9 @@
 #include "pkGraphics.h"
 
 #include "graphics/pkGraphicsUtils.h"
-#include "graphics/pkGraphicsSurface.h"
 #include "graphics/pkGraphicsWindow.h"
+#include "graphics/pkGraphicsSurface.h"
+#include "graphics/pkGraphicsAllocator.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -12,7 +13,6 @@
 #include <array>
 
 VkDebugUtilsMessengerEXT s_debugMessenger;
-VmaAllocator s_allocator;
 
 VkInstance s_instance;
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
@@ -201,14 +201,14 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice)
 
 bool isDeviceSuitable(VkPhysicalDevice physicalDevice)
 {
-    PkGraphicsUtilsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, pkGraphicsSurface_GetSurface());
 
     bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported)
     {
-        PkGraphicsUtilsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
+        PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
@@ -265,7 +265,7 @@ void pickPhysicalDevice()
 
 void createLogicalDevice() 
 {
-    PkGraphicsUtilsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -313,23 +313,9 @@ void createLogicalDevice()
     vkGetDeviceQueue(s_device, indices.presentFamily.value(), 0, &s_presentQueue);
 }
 
-void createAllocator() 
-{
-    VmaAllocatorCreateInfo allocatorInfo = {};
-    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
-    allocatorInfo.physicalDevice = s_physicalDevice;
-    allocatorInfo.device = s_device;
-    allocatorInfo.instance = s_instance;
-
-    if (vmaCreateAllocator(&allocatorInfo, &s_allocator) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create allocator!");
-    }
-}
-
 void createCommandPool()
 {
-    PkGraphicsUtilsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -367,11 +353,6 @@ void createDescriptorSetLayout()
     {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
-}
-
-VmaAllocator pkGraphics_GetAllocator()
-{
-    return s_allocator;
 }
 
 VkInstance pkGraphics_GetInstance()
@@ -433,7 +414,9 @@ void pkGraphics_Initialise()
 
     pickPhysicalDevice();
     createLogicalDevice();
-    createAllocator();
+
+    pkGraphicsAllocator_Create(s_instance, s_physicalDevice, s_device);
+
     createCommandPool();
     createDescriptorSetLayout();
 }
@@ -441,19 +424,17 @@ void pkGraphics_Initialise()
 void pkGraphics_Cleanup()
 {
     vkDestroyDescriptorSetLayout(s_device, s_descriptorSetLayout, nullptr);
-
     vkDestroyCommandPool(s_device, s_commandPool, nullptr);
 
-    vmaDestroyAllocator(s_allocator);
+    pkGraphicsAllocator_Destroy();
 
     vkDestroyDevice(s_device, nullptr);
+    pkGraphicsSurface_Destroy(s_instance);
 
     if (enableValidationLayers)
     {
         DestroyDebugUtilsMessengerEXT(s_debugMessenger, nullptr);
     }
-
-    pkGraphicsSurface_Destroy(s_instance);
 
     vkDestroyInstance(s_instance, nullptr);
 }

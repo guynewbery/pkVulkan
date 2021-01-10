@@ -1,9 +1,10 @@
 #include "pkGraphicsTest.h"
 
+#include "graphics/pkGraphics.h"
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSwapChain.h"
 #include "graphics/pkGraphicsWindow.h"
-#include "graphics/pkGraphics.h"
+#include "graphics/pkGraphicsAllocator.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -104,17 +105,6 @@ namespace std {
     };
 }
 
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
-
-struct PkGpuBuffer {
-    VkBuffer buffer;
-    VmaAllocation allocation;
-};
-
 struct PkGpuImage {
     VkImage image;
     VkImageView imageView;
@@ -137,13 +127,16 @@ public:
     VkSampler textureSampler;
 
     std::vector<InstanceData> instances;
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    PkGpuBuffer instanceBuffer;
-    PkGpuBuffer vertexBuffer;
-    PkGpuBuffer indexBuffer;
+    VkBuffer instanceBuffer;
+    VmaAllocation instanceBufferAllocation;
 
-    std::vector<PkGpuBuffer> uniformBuffers;
+    std::vector<Vertex> vertices;
+    VkBuffer vertexBuffer;
+    VmaAllocation vertexBufferAllocation;
+
+    std::vector<uint32_t> indices;
+    VkBuffer indexBuffer;
+    VmaAllocation indexBufferAllocation;
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -166,8 +159,7 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-        pkGraphicsSwapChain_Create(s_swapChain, pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
-        createUniformBuffers();
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
         createDescriptorPool();
         createDescriptorSets();
 
@@ -196,26 +188,25 @@ public:
 
         cleanupSwapChain();
 
-        pkGraphicsSwapChain_Create(s_swapChain, pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
+        createDescriptorPool();
+        createDescriptorSets();
 
         createRenderPass();
         createGraphicsPipeline();
         createColorResources();
         createDepthResources();
         createFramebuffers();
-        createUniformBuffers();
-        createDescriptorPool();
-        createDescriptorSets();
         createCommandBuffers();
     }
 
     void cleanupSwapChain() 
     {
         vkDestroyImageView(pkGraphics_GetDevice(), depthImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphics_GetAllocator(), depthImage.image, depthImage.allocation);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), depthImage.image, depthImage.allocation);
 
         vkDestroyImageView(pkGraphics_GetDevice(), colorImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphics_GetAllocator(), colorImage.image, colorImage.allocation);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), colorImage.image, colorImage.allocation);
 
         for (auto framebuffer : swapChainFramebuffers) 
         {
@@ -228,12 +219,7 @@ public:
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
 
-        pkGraphicsSwapChain_Destroy(s_swapChain, pkGraphics_GetDevice());
-
-        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
-        {
-            vmaDestroyBuffer(pkGraphics_GetAllocator(), uniformBuffers[i].buffer, uniformBuffers[i].allocation);
-        }
+        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice(), s_swapChain);
 
         vkDestroyDescriptorPool(pkGraphics_GetDevice(), descriptorPool, nullptr);
     }
@@ -245,11 +231,11 @@ public:
         vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
 
         vkDestroyImageView(pkGraphics_GetDevice(), textureImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphics_GetAllocator(), textureImage.image, textureImage.allocation);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage.image, textureImage.allocation);
 
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), indexBuffer.buffer, indexBuffer.allocation);
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), vertexBuffer.buffer, vertexBuffer.allocation);
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), instanceBuffer.buffer, instanceBuffer.allocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), indexBuffer, indexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), vertexBuffer, vertexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), instanceBuffer, instanceBufferAllocation);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(pkGraphics_GetDevice(), renderFinishedSemaphores[i], nullptr);
@@ -532,23 +518,24 @@ public:
             throw std::runtime_error("failed to load texture image!");
         }
 
-        PkGpuBuffer stagingBuffer;
-        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer);
+        VkBuffer stagingBuffer;
+        VmaAllocation stagingBufferAllocation;
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
 
         void* data;
-        vmaMapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation, &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vmaUnmapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
         stbi_image_free(pixels);
 
         createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
 
         transitionImageLayout(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-        copyBufferToImage(stagingBuffer.buffer, textureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        copyBufferToImage(stagingBuffer, textureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
 
         generateMipmaps(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
     }
@@ -693,7 +680,7 @@ public:
         allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
         allocInfo.requiredFlags = properties;
 
-        if (vmaCreateImage(pkGraphics_GetAllocator(), &imageInfo, &allocInfo, &image.image, &image.allocation, nullptr) != VK_SUCCESS) 
+        if (vmaCreateImage(pkGraphicsAllocator_GetAllocator(), &imageInfo, &allocInfo, &image.image, &image.allocation, nullptr) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to create buffer!");
         }
@@ -857,70 +844,63 @@ public:
         }
     }
 
-    void createInstanceBuffer() {
+    void createInstanceBuffer() 
+    {
         VkDeviceSize bufferSize = sizeof(instances[0]) * instances.size();
 
-        PkGpuBuffer stagingBuffer;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer);
+        VkBuffer stagingBuffer;
+        VmaAllocation stagingBufferAllocation;
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
 
         void* data;
-        vmaMapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation, &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, instances.data(), (size_t)bufferSize);
-        vmaUnmapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, instanceBuffer);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &instanceBuffer, &instanceBufferAllocation);
 
-        copyBuffer(stagingBuffer.buffer, instanceBuffer.buffer, bufferSize);
+        copyBuffer(stagingBuffer, instanceBuffer, bufferSize);
 
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
-    void createVertexBuffer() {
+    void createVertexBuffer() 
+    {
         VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
 
-        PkGpuBuffer stagingBuffer;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer);
+        VkBuffer stagingBuffer;
+        VmaAllocation stagingBufferAllocation;
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
 
         void* data;
-        vmaMapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation, &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, vertices.data(), (size_t)bufferSize);
-        vmaUnmapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vertexBuffer, &vertexBufferAllocation);
 
-        copyBuffer(stagingBuffer.buffer, vertexBuffer.buffer, bufferSize);
+        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
 
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     void createIndexBuffer() {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
-        PkGpuBuffer stagingBuffer;
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer);
+        VkBuffer stagingBuffer;
+        VmaAllocation stagingBufferAllocation;
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
 
         void* data;
-        vmaMapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation, &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, indices.data(), (size_t)bufferSize);
-        vmaUnmapMemory(pkGraphics_GetAllocator(), stagingBuffer.allocation);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &indexBuffer, &indexBufferAllocation);
 
-        copyBuffer(stagingBuffer.buffer, indexBuffer.buffer, bufferSize);
+        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
 
-        vmaDestroyBuffer(pkGraphics_GetAllocator(), stagingBuffer.buffer, stagingBuffer.allocation);
-    }
-
-    void createUniformBuffers() 
-    {
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-        uniformBuffers.resize(s_swapChain.swapChainImages.size());
-
-        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
-        {
-            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i]);
-        }
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     void createDescriptorPool() 
@@ -961,7 +941,7 @@ public:
         for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
         {
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i].buffer;
+            bufferInfo.buffer = s_swapChain.uniformBuffers[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -989,24 +969,6 @@ public:
             descriptorWrites[1].pImageInfo = &imageInfo;
 
             vkUpdateDescriptorSets(pkGraphics_GetDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-        }
-    }
-
-    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, PkGpuBuffer& buffer) 
-    {
-        VkBufferCreateInfo bufferInfo{};
-        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        bufferInfo.size = size;
-        bufferInfo.usage = usage;
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        VmaAllocationCreateInfo allocInfo = {};
-        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocInfo.requiredFlags = properties;
-
-        if (vmaCreateBuffer(pkGraphics_GetAllocator(), &bufferInfo, &allocInfo, &buffer.buffer, &buffer.allocation, nullptr) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create buffer!");
         }
     }
 
@@ -1096,15 +1058,15 @@ public:
 
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-            VkBuffer vertexBuffers[] = { vertexBuffer.buffer };
+            VkBuffer vertexBuffers[] = { vertexBuffer };
             VkDeviceSize vertexOffsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, vertexOffsets);
 
-            VkBuffer instanceBuffers[] = { instanceBuffer.buffer };
+            VkBuffer instanceBuffers[] = { instanceBuffer };
             VkDeviceSize instanceOffsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 1, 1, instanceBuffers, instanceOffsets);
 
-            vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
             vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
 
@@ -1155,9 +1117,9 @@ public:
         ubo.proj[1][1] *= -1;
 
         void* data;
-        vmaMapMemory(pkGraphics_GetAllocator(), uniformBuffers[currentImage].allocation, &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBufferAllocations[currentImage], &data);
         memcpy(data, &ubo, sizeof(ubo));
-        vmaUnmapMemory(pkGraphics_GetAllocator(), uniformBuffers[currentImage].allocation);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBufferAllocations[currentImage]);
     }
 
     void drawFrame() 

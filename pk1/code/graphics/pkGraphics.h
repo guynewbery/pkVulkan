@@ -2,9 +2,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include <vk_mem_alloc.h>
-
-VmaAllocator pkGraphics_GetAllocator();
 VkInstance pkGraphics_GetInstance();
 VkPhysicalDevice pkGraphics_GetPhysicalDevice();
 VkDevice pkGraphics_GetDevice();

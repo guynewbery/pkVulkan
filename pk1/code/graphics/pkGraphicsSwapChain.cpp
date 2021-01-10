@@ -3,6 +3,7 @@
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSurface.h"
 #include "graphics/pkGraphicsWindow.h"
+#include "graphics/pkGraphicsAllocator.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -59,9 +60,9 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     }
 }
 
-void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device)
+void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, PkGraphicsSwapChain& rSwapChain)
 {
-    PkGraphicsUtilsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
+    PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -84,7 +85,7 @@ void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance inst
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    PkGraphicsUtilsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, pkGraphicsSurface_GetSurface());
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -120,10 +121,23 @@ void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance inst
     {
         rSwapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, rSwapChain.swapChainImages[i], rSwapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
+
+    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+    rSwapChain.uniformBuffers.resize(rSwapChain.swapChainImages.size());
+    rSwapChain.uniformBufferAllocations.resize(rSwapChain.swapChainImages.size());
+    for (size_t i = 0; i < rSwapChain.swapChainImages.size(); i++)
+    {
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &rSwapChain.uniformBuffers[i], &rSwapChain.uniformBufferAllocations[i]);
+    }
 }
 
-void pkGraphicsSwapChain_Destroy(PkGraphicsSwapChain& rSwapChain, VkDevice device)
+void pkGraphicsSwapChain_Destroy(VkDevice device, PkGraphicsSwapChain& rSwapChain)
 {
+    for (size_t i = 0; i < rSwapChain.swapChainImages.size(); i++)
+    {
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), rSwapChain.uniformBuffers[i], rSwapChain.uniformBufferAllocations[i]);
+    }
+
     for (VkImageView imageView : rSwapChain.swapChainImageViews)
     {
         vkDestroyImageView(device, imageView, nullptr);

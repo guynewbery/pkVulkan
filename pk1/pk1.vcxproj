@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="code\camera\pkCamera.cpp" />
     <ClCompile Include="code\game.cpp" />
+    <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsTest.cpp" />
     <ClCompile Include="code\graphics\pkGraphics.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsSurface.cpp" />
@@ -32,6 +33,7 @@
   <ItemGroup>
     <ClInclude Include="code\camera\pkCamera.h" />
     <ClInclude Include="code\game.h" />
+    <ClInclude Include="code\graphics\pkGraphicsAllocator.h" />
     <ClInclude Include="code\graphics\pkGraphicsTest.h" />
     <ClInclude Include="code\graphics\pkGraphics.h" />
     <ClInclude Include="code\graphics\pkGraphicsSurface.h" />

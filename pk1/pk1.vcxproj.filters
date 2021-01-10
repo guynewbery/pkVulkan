@@ -39,6 +39,9 @@
     <ClCompile Include="code\graphics\pkGraphics.cpp">
       <Filter>code\pkGraphics</Filter>
     </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
@@ -66,6 +69,9 @@
       <Filter>code\pkGraphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphics.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsAllocator.h">
       <Filter>code\pkGraphics</Filter>
     </ClInclude>
   </ItemGroup>
