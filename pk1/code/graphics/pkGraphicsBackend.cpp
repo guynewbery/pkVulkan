@@ -1,5 +1,8 @@
 #include "pkGraphicsBackend.h"
 
+#include "graphics/pkGraphicsUtils.h"
+#include "graphics/pkGraphicsSurface.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -9,12 +12,11 @@
 static GLFWwindow* s_pWindow = nullptr;
 
 VkDebugUtilsMessengerEXT s_debugMessenger;
+VmaAllocator s_allocator;
 
 VkInstance s_instance;
-VkSurfaceKHR s_surface;
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
 VkDevice s_device;
-VmaAllocator s_allocator;
 VkCommandPool s_commandPool;
 
 VkQueue s_graphicsQueue;
@@ -32,10 +34,10 @@ const std::vector<const char*> deviceExtensions =
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
+#ifdef _DEBUG
 const bool enableValidationLayers = true;
+#else
+const bool enableValidationLayers = false;
 #endif
 
 VkResult CreateDebugUtilsMessengerEXT(const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) 
@@ -178,14 +180,6 @@ void setupDebugMessenger()
     }
 }
 
-void createSurface()
-{
-    if (glfwCreateWindowSurface(s_instance, s_pWindow, nullptr, &s_surface) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create window surface!");
-    }
-}
-
 bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice)
 {
     uint32_t extensionCount;
@@ -206,14 +200,14 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice)
 
 bool isDeviceSuitable(VkPhysicalDevice physicalDevice)
 {
-    PkGraphicsBackendQueueFamilyIndices indices = pkGraphicsBackend_FindQueueFamilies(physicalDevice);
+    PkGraphicsUtilsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, pkGraphicsSurface_GetSurface());
 
     bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported)
     {
-        PkGraphicsBackendSwapChainSupport swapChainSupport = pkGraphicsBackend_QuerySwapChainSupport(physicalDevice);
+        PkGraphicsUtilsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
@@ -270,7 +264,7 @@ void pickPhysicalDevice()
 
 void createLogicalDevice() 
 {
-    PkGraphicsBackendQueueFamilyIndices indices = pkGraphicsBackend_FindQueueFamilies(s_physicalDevice);
+    PkGraphicsUtilsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -334,7 +328,7 @@ void createAllocator()
 
 void createCommandPool()
 {
-    PkGraphicsBackendQueueFamilyIndices queueFamilyIndices = pkGraphicsBackend_FindQueueFamilies(s_physicalDevice);
+    PkGraphicsUtilsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -344,70 +338,6 @@ void createCommandPool()
     {
         throw std::runtime_error("failed to create graphics command pool!");
     }
-}
-
-PkGraphicsBackendSwapChainSupport pkGraphicsBackend_QuerySwapChainSupport(VkPhysicalDevice physicalDevice)
-{
-    PkGraphicsBackendSwapChainSupport details;
-
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, s_surface, &details.capabilities);
-
-    uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, s_surface, &formatCount, nullptr);
-
-    if (formatCount != 0) 
-    {
-        details.formats.resize(formatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, s_surface, &formatCount, details.formats.data());
-    }
-
-    uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, s_surface, &presentModeCount, nullptr);
-
-    if (presentModeCount != 0) 
-    {
-        details.presentModes.resize(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, s_surface, &presentModeCount, details.presentModes.data());
-    }
-
-    return details;
-}
-
-PkGraphicsBackendQueueFamilyIndices pkGraphicsBackend_FindQueueFamilies(VkPhysicalDevice physicalDevice)
-{
-    PkGraphicsBackendQueueFamilyIndices indices;
-
-    uint32_t queueFamilyCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, nullptr);
-
-    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueFamilyCount, queueFamilies.data());
-
-    int i = 0;
-    for (const auto& queueFamily : queueFamilies) 
-    {
-        if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) 
-        {
-            indices.graphicsFamily = i;
-        }
-
-        VkBool32 presentSupport = false;
-        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, s_surface, &presentSupport);
-
-        if (presentSupport) 
-        {
-            indices.presentFamily = i;
-        }
-
-        if (indices.isComplete()) 
-        {
-            break;
-        }
-
-        i++;
-    }
-
-    return indices;
 }
 
 VkFormat pkGraphicsBackend_FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) 
@@ -435,9 +365,9 @@ VmaAllocator pkGraphicsBackend_GetAllocator()
     return s_allocator;
 }
 
-VkSurfaceKHR pkGraphicsBackend_GetSurface()
+VkInstance pkGraphicsBackend_GetInstance()
 {
-    return s_surface;
+    return s_instance;
 }
 
 VkPhysicalDevice pkGraphicsBackend_GetPhysicalDevice()
@@ -486,7 +416,9 @@ void pkGraphicsBackend_Initialise(GLFWwindow& rWindow)
 
     createInstance();
     setupDebugMessenger();
-    createSurface();
+
+    pkGraphicsSurface_Create(s_instance, s_pWindow);
+
     pickPhysicalDevice();
     createLogicalDevice();
     createAllocator();
@@ -506,7 +438,8 @@ void pkGraphicsBackend_Cleanup()
         DestroyDebugUtilsMessengerEXT(s_debugMessenger, nullptr);
     }
 
-    vkDestroySurfaceKHR(s_instance, s_surface, nullptr);
+    pkGraphicsSurface_Destroy(s_instance);
+
     vkDestroyInstance(s_instance, nullptr);
 
     s_pWindow = nullptr;

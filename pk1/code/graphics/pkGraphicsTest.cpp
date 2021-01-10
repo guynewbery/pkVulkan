@@ -1,4 +1,7 @@
-#include "pkGraphics.h"
+#include "pkGraphicsTest.h"
+
+#include "graphics/pkGraphicsUtils.h"
+#include "graphics/pkGraphicsSwapChain.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -24,6 +27,7 @@
 
 static PkGraphicsWindow* s_pGraphicsWindow = nullptr;
 static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
+static PkGraphicsSwapChain s_swapChain;
 
 const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
@@ -118,11 +122,6 @@ struct PkGpuImage {
 
 class HelloTriangleApplication {
 public:
-    VkSwapchainKHR swapChain;
-    std::vector<VkImage> swapChainImages;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkImageView> swapChainImageViews;
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass renderPass;
@@ -158,8 +157,8 @@ public:
     size_t currentFrame = 0;
 
     void initVulkan() {
-        createSwapChain();
-        createImageViews();
+        pkGraphicsSwapChain_Create(s_swapChain, pkGraphicsBackend_GetInstance(), pkGraphicsBackend_GetPhysicalDevice(), pkGraphicsBackend_GetDevice(), s_pGraphicsWindow->pWindow);
+
         createRenderPass();
         createDescriptorSetLayout();
         createGraphicsPipeline();
@@ -197,13 +196,15 @@ public:
         vkDestroyPipelineLayout(pkGraphicsBackend_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphicsBackend_GetDevice(), renderPass, nullptr);
 
-        for (auto imageView : swapChainImageViews) {
-            vkDestroyImageView(pkGraphicsBackend_GetDevice(), imageView, nullptr);
-        }
+        //for (auto imageView : swapChainImageViews) 
+        //{
+        //    vkDestroyImageView(pkGraphicsBackend_GetDevice(), imageView, nullptr);
+        //}
+        //
+        //vkDestroySwapchainKHR(pkGraphicsBackend_GetDevice(), swapChain, nullptr);
 
-        vkDestroySwapchainKHR(pkGraphicsBackend_GetDevice(), swapChain, nullptr);
-
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
+        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
+        {
             vmaDestroyBuffer(pkGraphicsBackend_GetAllocator(), uniformBuffers[i].buffer, uniformBuffers[i].allocation);
         }
 
@@ -246,8 +247,8 @@ public:
 
         cleanupSwapChain();
 
-        createSwapChain();
-        createImageViews();
+        //createSwapChain();
+        //createImageViews();
         createRenderPass();
         createGraphicsPipeline();
         createColorResources();
@@ -259,77 +260,10 @@ public:
         createCommandBuffers();
     }
 
-    void createSwapChain() 
-    {
-        PkGraphicsBackendSwapChainSupport swapChainSupport = pkGraphicsBackend_QuerySwapChainSupport(pkGraphicsBackend_GetPhysicalDevice());
-
-        VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-        VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-        VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
-
-        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-        if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount) 
-        {
-            imageCount = swapChainSupport.capabilities.maxImageCount;
-        }
-
-        VkSwapchainCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = pkGraphicsBackend_GetSurface();
-
-        createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        PkGraphicsBackendQueueFamilyIndices indices = pkGraphicsBackend_FindQueueFamilies(pkGraphicsBackend_GetPhysicalDevice());
-        uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-        if (indices.graphicsFamily != indices.presentFamily) 
-        {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
-        }
-        else 
-        {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        }
-
-        createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE;
-
-        if (vkCreateSwapchainKHR(pkGraphicsBackend_GetDevice(), &createInfo, nullptr, &swapChain) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create swap chain!");
-        }
-
-        vkGetSwapchainImagesKHR(pkGraphicsBackend_GetDevice(), swapChain, &imageCount, nullptr);
-        swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(pkGraphicsBackend_GetDevice(), swapChain, &imageCount, swapChainImages.data());
-
-        swapChainImageFormat = surfaceFormat.format;
-        swapChainExtent = extent;
-    }
-
-    void createImageViews() 
-    {
-        swapChainImageViews.resize(swapChainImages.size());
-
-        for (uint32_t i = 0; i < swapChainImages.size(); i++) 
-        {
-            swapChainImageViews[i] = createImageView(swapChainImages[i], swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-        }
-    }
-
     void createRenderPass() 
     {
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapChainImageFormat;
+        colorAttachment.format = s_swapChain.swapChainImageFormat;
         colorAttachment.samples = pkGraphicsBackend_GetMaxMsaaSampleCount();
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -349,7 +283,7 @@ public:
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription colorAttachmentResolve{};
-        colorAttachmentResolve.format = swapChainImageFormat;
+        colorAttachmentResolve.format = s_swapChain.swapChainImageFormat;
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -470,14 +404,14 @@ public:
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)swapChainExtent.width;
-        viewport.height = (float)swapChainExtent.height;
+        viewport.width = (float)s_swapChain.swapChainExtent.width;
+        viewport.height = (float)s_swapChain.swapChainExtent.height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
+        scissor.extent = s_swapChain.swapChainExtent;
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -561,15 +495,15 @@ public:
 
     void createFramebuffers() 
     {
-        swapChainFramebuffers.resize(swapChainImageViews.size());
+        swapChainFramebuffers.resize(s_swapChain.swapChainImageViews.size());
 
-        for (size_t i = 0; i < swapChainImageViews.size(); i++) 
+        for (size_t i = 0; i < s_swapChain.swapChainImageViews.size(); i++)
         {
             std::array<VkImageView, 3> attachments = 
             {
                 colorImage.imageView,
                 depthImage.imageView,
-                swapChainImageViews[i]
+                s_swapChain.swapChainImageViews[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
@@ -577,8 +511,8 @@ public:
             framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.width = s_swapChain.swapChainExtent.width;
+            framebufferInfo.height = s_swapChain.swapChainExtent.height;
             framebufferInfo.layers = 1;
 
             if (vkCreateFramebuffer(pkGraphicsBackend_GetDevice(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) 
@@ -590,14 +524,14 @@ public:
 
     void createColorResources() 
     {
-        VkFormat colorFormat = swapChainImageFormat;
-        createImage(swapChainExtent.width, swapChainExtent.height, 1, pkGraphicsBackend_GetMaxMsaaSampleCount(), colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
+        VkFormat colorFormat = s_swapChain.swapChainImageFormat;
+        createImage(s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, pkGraphicsBackend_GetMaxMsaaSampleCount(), colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
     }
 
     void createDepthResources() 
     {
         VkFormat depthFormat = findDepthFormat();
-        createImage(swapChainExtent.width, swapChainExtent.height, 1, pkGraphicsBackend_GetMaxMsaaSampleCount(), depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+        createImage(s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, pkGraphicsBackend_GetMaxMsaaSampleCount(), depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
     }
 
     VkFormat findDepthFormat() 
@@ -767,29 +701,7 @@ public:
         }
     }
 
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels) 
-    {
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = format;
-        viewInfo.subresourceRange.aspectMask = aspectFlags;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = mipLevels;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
-
-        VkImageView imageView;
-        if (vkCreateImageView(pkGraphicsBackend_GetDevice(), &viewInfo, nullptr, &imageView) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create texture image view!");
-        }
-
-        return imageView;
-    }
-
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageAspectFlags aspectFlags, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, PkGpuImage& image) 
+    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageAspectFlags aspectFlags, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, PkGpuImage& image)
     {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -815,7 +727,7 @@ public:
             throw std::runtime_error("failed to create buffer!");
         }
 
-        image.imageView = createImageView(image.image, format, aspectFlags, mipLevels);
+        image.imageView = pkGraphicsUtils_CreateImageView(pkGraphicsBackend_GetDevice(), image.image, format, aspectFlags, mipLevels);
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) 
@@ -1032,9 +944,9 @@ public:
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-        uniformBuffers.resize(swapChainImages.size());
+        uniformBuffers.resize(s_swapChain.swapChainImages.size());
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) 
+        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
         {
             createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i]);
         }
@@ -1044,15 +956,15 @@ public:
     {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());
+        poolInfo.maxSets = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
 
         if (vkCreateDescriptorPool(pkGraphicsBackend_GetDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) 
         {
@@ -1062,20 +974,20 @@ public:
 
     void createDescriptorSets() 
     {
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(), descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(s_swapChain.swapChainImages.size(), descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size());
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(swapChainImages.size());
+        descriptorSets.resize(s_swapChain.swapChainImages.size());
         if (vkAllocateDescriptorSets(pkGraphicsBackend_GetDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < swapChainImages.size(); i++) 
+        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
         {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i].buffer;
@@ -1200,7 +1112,7 @@ public:
             renderPassInfo.renderPass = renderPass;
             renderPassInfo.framebuffer = swapChainFramebuffers[i];
             renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = swapChainExtent;
+            renderPassInfo.renderArea.extent = s_swapChain.swapChainExtent;
 
             std::array<VkClearValue, 2> clearValues{};
             clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1240,7 +1152,7 @@ public:
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-        imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+        imagesInFlight.resize(s_swapChain.swapChainImages.size(), VK_NULL_HANDLE);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1261,7 +1173,7 @@ public:
     void updateUniformBuffer(uint32_t currentImage) 
     {
         float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
-        float aspectRatio = swapChainExtent.width / (float)swapChainExtent.height;
+        float aspectRatio = s_swapChain.swapChainExtent.width / (float)s_swapChain.swapChainExtent.height;
         float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
         float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
 
@@ -1282,7 +1194,7 @@ public:
         vkWaitForFences(pkGraphicsBackend_GetDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(pkGraphicsBackend_GetDevice(), swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(pkGraphicsBackend_GetDevice(), s_swapChain.swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
@@ -1327,7 +1239,7 @@ public:
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
 
-        VkSwapchainKHR swapChains[] = { swapChain };
+        VkSwapchainKHR swapChains[] = { s_swapChain.swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
 
@@ -1361,56 +1273,6 @@ public:
         }
 
         return shaderModule;
-    }
-
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) 
-    {
-        for (const auto& availableFormat : availableFormats) 
-        {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) 
-            {
-                return availableFormat;
-            }
-        }
-
-        return availableFormats[0];
-    }
-
-    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) 
-    {
-        for (const auto& availablePresentMode : availablePresentModes) 
-        {
-            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) 
-            {
-                return availablePresentMode;
-            }
-        }
-
-        return VK_PRESENT_MODE_FIFO_KHR;
-    }
-
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) 
-    {
-        if (capabilities.currentExtent.width != UINT32_MAX) 
-        {
-            return capabilities.currentExtent;
-        }
-        else 
-        {
-            int width, height;
-            glfwGetFramebufferSize(s_pGraphicsWindow->pWindow, &width, &height);
-
-            VkExtent2D actualExtent = 
-            {
-                static_cast<uint32_t>(width),
-                static_cast<uint32_t>(height)
-            };
-
-            actualExtent.width = std::max(capabilities.minImageExtent.width, std::min(capabilities.maxImageExtent.width, actualExtent.width));
-            actualExtent.height = std::max(capabilities.minImageExtent.height, std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
-            return actualExtent;
-        }
     }
 
     static std::vector<char> readFile(const std::string& filename) 

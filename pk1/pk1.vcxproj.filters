@@ -18,14 +18,23 @@
     <ClCompile Include="code\game.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphics.cpp">
-      <Filter>code\pkGraphics</Filter>
-    </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsBackend.cpp">
       <Filter>code\pkGraphics</Filter>
     </ClCompile>
     <ClCompile Include="code\camera\pkCamera.cpp">
       <Filter>code\pPkCamera</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsSurface.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsUtils.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsTest.cpp">
+      <Filter>code\pkGraphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -35,14 +44,23 @@
     <ClInclude Include="code\game.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphics.h">
-      <Filter>code\pkGraphics</Filter>
-    </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsBackend.h">
       <Filter>code\pkGraphics</Filter>
     </ClInclude>
     <ClInclude Include="code\camera\pkCamera.h">
       <Filter>code\pPkCamera</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsSwapChain.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsSurface.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsUtils.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsTest.h">
+      <Filter>code\pkGraphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

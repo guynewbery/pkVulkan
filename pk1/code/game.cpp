@@ -1,6 +1,6 @@
 #include "game.h"
 
-#include "graphics/pkGraphics.h"
+#include "graphics/pkGraphicsTest.h"
 #include "camera/pkCamera.h"
 
 #define GLFW_INCLUDE_VULKAN
@@ -46,20 +46,6 @@ static void gameGraphicsWindowCleanup()
 	glfwTerminate();
 }
 
-static void gameInitialise()
-{
-	currentTime = std::chrono::high_resolution_clock::now();
-
-	gameGraphicsWindowInitialise();
-	pkGraphics_Initialise(s_graphicsWindow, s_graphicsModelViewProjection);
-}
-
-static void gameCleanup()
-{
-	pkGraphics_Cleanup();
-	gameGraphicsWindowCleanup();
-}
-
 static void gameUpdate()
 {
 	lastTime = currentTime;
@@ -70,6 +56,22 @@ static void gameUpdate()
 
 	pkCamera_Update(s_graphicsModelViewProjection, dt);
 	pkGraphics_Render();
+}
+
+static void gameInitialise()
+{
+	currentTime = std::chrono::high_resolution_clock::now();
+
+	gameGraphicsWindowInitialise();
+	pkGraphics_Initialise(s_graphicsWindow, s_graphicsModelViewProjection);
+//	graphicsImgui_Initialise(s_graphicsWindow.pWindow);
+}
+
+static void gameCleanup()
+{
+//	graphicsImgui_Cleanup();
+	pkGraphics_Cleanup();
+	gameGraphicsWindowCleanup();
 }
 
 void GameMain()
