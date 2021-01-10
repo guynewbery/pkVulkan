@@ -29,6 +29,8 @@ struct PkGraphicsSwapChain
 
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VmaAllocation> uniformBufferAllocations;
+
+	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 };
 
 void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, PkGraphicsSwapChain& rSwapChain);

@@ -138,7 +138,6 @@ public:
     VkBuffer indexBuffer;
     VmaAllocation indexBufferAllocation;
 
-    VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
@@ -160,13 +159,13 @@ public:
         createIndexBuffer();
 
         pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
-        createDescriptorPool();
+
+        createColorResources();
+        createDepthResources();
         createDescriptorSets();
 
         createRenderPass();
         createGraphicsPipeline();
-        createColorResources();
-        createDepthResources();
         createFramebuffers();
         createCommandBuffers();
 
@@ -189,13 +188,13 @@ public:
         cleanupSwapChain();
 
         pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
-        createDescriptorPool();
+
+        createColorResources();
+        createDepthResources();
         createDescriptorSets();
 
         createRenderPass();
         createGraphicsPipeline();
-        createColorResources();
-        createDepthResources();
         createFramebuffers();
         createCommandBuffers();
     }
@@ -220,8 +219,6 @@ public:
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
 
         pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice(), s_swapChain);
-
-        vkDestroyDescriptorPool(pkGraphics_GetDevice(), descriptorPool, nullptr);
     }
 
     void cleanup() 
@@ -499,11 +496,6 @@ public:
             VK_IMAGE_TILING_OPTIMAL,
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
         );
-    }
-
-    bool hasStencilComponent(VkFormat format) 
-    {
-        return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
     }
 
     void createTextureImage() 
@@ -884,7 +876,8 @@ public:
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
-    void createIndexBuffer() {
+    void createIndexBuffer()
+    {
         VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
 
         VkBuffer stagingBuffer;
@@ -903,32 +896,12 @@ public:
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
-    void createDescriptorPool() 
-    {
-        std::array<VkDescriptorPoolSize, 2> poolSizes{};
-        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-
-        VkDescriptorPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-        poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-
-        if (vkCreateDescriptorPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create descriptor pool!");
-        }
-    }
-
     void createDescriptorSets() 
     {
         std::vector<VkDescriptorSetLayout> layouts(s_swapChain.swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorPool = s_swapChain.descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 
