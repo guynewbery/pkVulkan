@@ -4,10 +4,10 @@
     <Filter Include="code">
       <UniqueIdentifier>{96c76f29-5e55-402c-a79f-3289e499172d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="code\graphics">
+    <Filter Include="code\pkGraphics">
       <UniqueIdentifier>{4238882a-35e1-4061-9f70-ac24fe497aff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="code\camera">
+    <Filter Include="code\pPkCamera">
       <UniqueIdentifier>{664b8d12-4fc0-45cd-a074-f011ff1cc5ba}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -15,28 +15,34 @@
     <ClCompile Include="code\main.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="code\graphics\graphics.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="code\game.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="code\camera\camera.cpp">
-      <Filter>code\camera</Filter>
+    <ClCompile Include="code\graphics\pkGraphics.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\pkGraphicsBackend.cpp">
+      <Filter>code\pkGraphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\camera\pkCamera.cpp">
+      <Filter>code\pPkCamera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="code\graphics\graphics.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="code\game.h">
       <Filter>code</Filter>
     </ClInclude>
-    <ClInclude Include="code\camera\camera.h">
-      <Filter>code\camera</Filter>
+    <ClInclude Include="code\graphics\pkGraphics.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\pkGraphicsBackend.h">
+      <Filter>code\pkGraphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\camera\pkCamera.h">
+      <Filter>code\pPkCamera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

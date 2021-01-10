@@ -19,15 +19,17 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="code\camera\camera.cpp" />
+    <ClCompile Include="code\camera\pkCamera.cpp" />
     <ClCompile Include="code\game.cpp" />
-    <ClCompile Include="code\graphics\graphics.cpp" />
+    <ClCompile Include="code\graphics\pkGraphics.cpp" />
+    <ClCompile Include="code\graphics\pkGraphicsBackend.cpp" />
     <ClCompile Include="code\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="code\camera\camera.h" />
+    <ClInclude Include="code\camera\pkCamera.h" />
     <ClInclude Include="code\game.h" />
-    <ClInclude Include="code\graphics\graphics.h" />
+    <ClInclude Include="code\graphics\pkGraphics.h" />
+    <ClInclude Include="code\graphics\pkGraphicsBackend.h" />
     <ClInclude Include="code\library_macros.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

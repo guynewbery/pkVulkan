@@ -1,7 +1,7 @@
 #include "game.h"
 
-#include "graphics/graphics.h"
-#include "camera/camera.h"
+#include "graphics/pkGraphics.h"
+#include "camera/pkCamera.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -30,8 +30,8 @@ static void gameGraphicsWindowInitialise()
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-	static const uint32_t WINDOW_WIDTH = 800;
-	static const uint32_t WINDOW_HEIGHT = 600;
+	static const uint32_t WINDOW_WIDTH = 1920;
+	static const uint32_t WINDOW_HEIGHT = 1080;
 
 	char windowName[128];
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
@@ -51,12 +51,12 @@ static void gameInitialise()
 	currentTime = std::chrono::high_resolution_clock::now();
 
 	gameGraphicsWindowInitialise();
-	PkGraphicsInitialise(s_graphicsWindow, s_graphicsModelViewProjection);
+	pkGraphics_Initialise(s_graphicsWindow, s_graphicsModelViewProjection);
 }
 
 static void gameCleanup()
 {
-	PkGraphicsCleanup();
+	pkGraphics_Cleanup();
 	gameGraphicsWindowCleanup();
 }
 
@@ -68,11 +68,11 @@ static void gameUpdate()
 
 	glfwPollEvents();
 
-	PkCameraUpdate(s_graphicsModelViewProjection, dt);
-	PkGraphicsRender();
+	pkCamera_Update(s_graphicsModelViewProjection, dt);
+	pkGraphics_Render();
 }
 
-void PkGameMain()
+void GameMain()
 {
 	gameInitialise();
 

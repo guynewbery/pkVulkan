@@ -7,7 +7,7 @@ int main()
 {
     try
     {
-        PkGameMain();
+        GameMain();
     }
     catch (const std::exception& e)
     {

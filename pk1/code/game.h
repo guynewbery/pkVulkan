@@ -1,1 +1,3 @@
-void PkGameMain();
+#pragma once
+
+void GameMain();
