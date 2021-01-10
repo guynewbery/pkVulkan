@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-VkSurfaceKHR s_surface;
+VkSurfaceKHR s_surface = VK_NULL_HANDLE;
 
 VkSurfaceKHR pkGraphicsSurface_GetSurface()
 {

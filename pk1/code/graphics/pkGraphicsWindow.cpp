@@ -5,8 +5,8 @@
 
 #include <iostream>
 
-GLFWwindow* s_pWindow;
-bool s_windowResized;
+GLFWwindow* s_pWindow = nullptr;
+bool s_windowResized = false;
 
 static void gameGraphicsWindowResizeCallback(GLFWwindow* pWindow, int width, int height)
 {

@@ -12,16 +12,16 @@
 #include <set>
 #include <array>
 
-VkDebugUtilsMessengerEXT s_debugMessenger;
+VkDebugUtilsMessengerEXT s_debugMessenger = VK_NULL_HANDLE;
 
-VkInstance s_instance;
+VkInstance s_instance = VK_NULL_HANDLE;
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
-VkDevice s_device;
-VkCommandPool s_commandPool;
-VkDescriptorSetLayout s_descriptorSetLayout;
+VkDevice s_device = VK_NULL_HANDLE;
+VkCommandPool s_commandPool = VK_NULL_HANDLE;
+VkDescriptorSetLayout s_descriptorSetLayout = VK_NULL_HANDLE;
 
-VkQueue s_graphicsQueue;
-VkQueue s_presentQueue;
+VkQueue s_graphicsQueue = VK_NULL_HANDLE;
+VkQueue s_presentQueue = VK_NULL_HANDLE;
 
 VkSampleCountFlagBits s_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-VmaAllocator s_allocator;
+VmaAllocator s_allocator = VK_NULL_HANDLE;
 
 VmaAllocator pkGraphicsAllocator_GetAllocator()
 {

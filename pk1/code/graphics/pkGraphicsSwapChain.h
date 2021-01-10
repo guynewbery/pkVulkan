@@ -15,17 +15,17 @@ struct UniformBufferObject
 
 struct PkGraphicsSwapChain
 {
-	int width;
-	int height;
+	int width = 0;
+	int height = 0;
 
-	VkSwapchainKHR swapChain;
+	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 	std::vector<VkImage> swapChainImages;
 	std::vector<VkImageView> swapChainImageViews;
-	VkFormat swapChainImageFormat;
-	VkExtent2D swapChainExtent;
+	VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
+	VkExtent2D swapChainExtent{ 0,0 };
 
 	VkSurfaceFormatKHR surfaceFormat;
-	VkPresentModeKHR presentMode;
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
 
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VmaAllocation> uniformBufferAllocations;
