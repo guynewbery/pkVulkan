@@ -9,6 +9,7 @@ VkInstance pkGraphics_GetInstance();
 VkPhysicalDevice pkGraphics_GetPhysicalDevice();
 VkDevice pkGraphics_GetDevice();
 VkCommandPool pkGraphics_GetCommandPool();
+VkDescriptorSetLayout* pkGraphics_GetDescriptorSetLayout();
 
 VkQueue pkGraphics_GetGraphicsQueue();
 VkQueue pkGraphics_GetPresentQueue();

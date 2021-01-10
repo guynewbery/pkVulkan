@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <set>
+#include <array>
 
 VkDebugUtilsMessengerEXT s_debugMessenger;
 VmaAllocator s_allocator;
@@ -17,6 +18,7 @@ VkInstance s_instance;
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
 VkDevice s_device;
 VkCommandPool s_commandPool;
+VkDescriptorSetLayout s_descriptorSetLayout;
 
 VkQueue s_graphicsQueue;
 VkQueue s_presentQueue;
@@ -339,6 +341,34 @@ void createCommandPool()
     }
 }
 
+void createDescriptorSetLayout()
+{
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.pImmutableSamplers = nullptr;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding = 1;
+    samplerLayoutBinding.descriptorCount = 1;
+    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+
+    if (vkCreateDescriptorSetLayout(pkGraphics_GetDevice(), &layoutInfo, nullptr, &s_descriptorSetLayout) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
+}
+
 VmaAllocator pkGraphics_GetAllocator()
 {
     return s_allocator;
@@ -362,6 +392,11 @@ VkDevice pkGraphics_GetDevice()
 VkCommandPool pkGraphics_GetCommandPool()
 {
     return s_commandPool;
+}
+
+VkDescriptorSetLayout* pkGraphics_GetDescriptorSetLayout()
+{
+    return &s_descriptorSetLayout;
 }
 
 VkQueue pkGraphics_GetGraphicsQueue()
@@ -400,10 +435,13 @@ void pkGraphics_Initialise()
     createLogicalDevice();
     createAllocator();
     createCommandPool();
+    createDescriptorSetLayout();
 }
 
 void pkGraphics_Cleanup()
 {
+    vkDestroyDescriptorSetLayout(s_device, s_descriptorSetLayout, nullptr);
+
     vkDestroyCommandPool(s_device, s_commandPool, nullptr);
 
     vmaDestroyAllocator(s_allocator);

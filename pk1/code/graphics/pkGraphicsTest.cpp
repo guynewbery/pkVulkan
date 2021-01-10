@@ -126,7 +126,6 @@ public:
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass renderPass;
-    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
@@ -157,9 +156,8 @@ public:
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
 
-    void initVulkan() {
-        createDescriptorSetLayout();
-
+    void initVulkan() 
+    {
         createTextureImage();
         createTextureSampler();
         populateInstanceData();
@@ -211,14 +209,16 @@ public:
         createCommandBuffers();
     }
 
-    void cleanupSwapChain() {
+    void cleanupSwapChain() 
+    {
         vkDestroyImageView(pkGraphics_GetDevice(), depthImage.imageView, nullptr);
         vmaDestroyImage(pkGraphics_GetAllocator(), depthImage.image, depthImage.allocation);
 
         vkDestroyImageView(pkGraphics_GetDevice(), colorImage.imageView, nullptr);
         vmaDestroyImage(pkGraphics_GetAllocator(), colorImage.image, colorImage.allocation);
 
-        for (auto framebuffer : swapChainFramebuffers) {
+        for (auto framebuffer : swapChainFramebuffers) 
+        {
             vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
         }
 
@@ -238,15 +238,14 @@ public:
         vkDestroyDescriptorPool(pkGraphics_GetDevice(), descriptorPool, nullptr);
     }
 
-    void cleanup() {
+    void cleanup() 
+    {
         cleanupSwapChain();
 
         vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
 
         vkDestroyImageView(pkGraphics_GetDevice(), textureImage.imageView, nullptr);
         vmaDestroyImage(pkGraphics_GetAllocator(), textureImage.image, textureImage.allocation);
-
-        vkDestroyDescriptorSetLayout(pkGraphics_GetDevice(), descriptorSetLayout, nullptr);
 
         vmaDestroyBuffer(pkGraphics_GetAllocator(), indexBuffer.buffer, indexBuffer.allocation);
         vmaDestroyBuffer(pkGraphics_GetAllocator(), vertexBuffer.buffer, vertexBuffer.allocation);
@@ -331,34 +330,6 @@ public:
         if (vkCreateRenderPass(pkGraphics_GetDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to create render pass!");
-        }
-    }
-
-    void createDescriptorSetLayout() 
-    {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(pkGraphics_GetDevice(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
 
@@ -460,7 +431,7 @@ public:
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutInfo.pSetLayouts = pkGraphics_GetDescriptorSetLayout();
 
         if (vkCreatePipelineLayout(pkGraphics_GetDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) 
         {
@@ -974,7 +945,7 @@ public:
 
     void createDescriptorSets() 
     {
-        std::vector<VkDescriptorSetLayout> layouts(s_swapChain.swapChainImages.size(), descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(s_swapChain.swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
