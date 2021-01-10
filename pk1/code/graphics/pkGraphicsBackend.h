@@ -12,7 +12,6 @@ VkFormat pkGraphicsBackend_FindSupportedFormat(const std::vector<VkFormat>& cand
 
 VmaAllocator pkGraphicsBackend_GetAllocator();
 VkInstance pkGraphicsBackend_GetInstance();
-VkSurfaceKHR pkGraphicsBackend_GetSurface();
 VkPhysicalDevice pkGraphicsBackend_GetPhysicalDevice();
 VkDevice pkGraphicsBackend_GetDevice();
 VkCommandPool pkGraphicsBackend_GetCommandPool();
