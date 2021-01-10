@@ -25,5 +25,5 @@ void pkGraphicsBackend_GetFormatProperties(VkFormat imageFormat, VkFormatPropert
 
 VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount();
 
-void pkGraphicsBackend_Initialise(GLFWwindow& rWindow);
+void pkGraphicsBackend_Initialise();
 void pkGraphicsBackend_Cleanup();

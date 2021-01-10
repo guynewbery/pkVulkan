@@ -21,5 +21,5 @@ struct PkGraphicsSwapChain
 	VkPresentModeKHR presentMode;
 };
 
-void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow* pWindow);
+void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device);
 void pkGraphicsSwapChain_Destroy(PkGraphicsSwapChain& rSwapChain, VkDevice device);

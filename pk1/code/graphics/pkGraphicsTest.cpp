@@ -2,6 +2,8 @@
 
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSwapChain.h"
+#include "graphics/pkGraphicsWindow.h"
+#include "graphics/pkGraphicsBackend.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -25,7 +27,6 @@
 #include <array>
 #include <unordered_map>
 
-static PkGraphicsWindow* s_pGraphicsWindow = nullptr;
 static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
 static PkGraphicsSwapChain s_swapChain;
 
@@ -157,7 +158,7 @@ public:
     size_t currentFrame = 0;
 
     void initVulkan() {
-        pkGraphicsSwapChain_Create(s_swapChain, pkGraphicsBackend_GetInstance(), pkGraphicsBackend_GetPhysicalDevice(), pkGraphicsBackend_GetDevice(), s_pGraphicsWindow->pWindow);
+        pkGraphicsSwapChain_Create(s_swapChain, pkGraphicsBackend_GetInstance(), pkGraphicsBackend_GetPhysicalDevice(), pkGraphicsBackend_GetDevice());
 
         createRenderPass();
         createDescriptorSetLayout();
@@ -235,11 +236,11 @@ public:
     void recreateSwapChain() 
     {
         int width = 0, height = 0;
-        glfwGetFramebufferSize(s_pGraphicsWindow->pWindow, &width, &height);
+        glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
 
         while (width == 0 || height == 0) 
         {
-            glfwGetFramebufferSize(s_pGraphicsWindow->pWindow, &width, &height);
+            glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
             glfwWaitEvents();
         }
 
@@ -1247,9 +1248,9 @@ public:
 
         result = vkQueuePresentKHR(pkGraphicsBackend_GetPresentQueue(), &presentInfo);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || s_pGraphicsWindow->windowResized)
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || pkGraphicsWindow_IsResized())
         {
-            s_pGraphicsWindow->windowResized = false;
+            pkGraphicsWindow_ResetResized();
             recreateSwapChain();
         }
         else if (result != VK_SUCCESS) 
@@ -1298,12 +1299,11 @@ public:
 
 HelloTriangleApplication app;
 
-void pkGraphics_Initialise(PkGraphicsWindow& rGraphicsWindow, PkGraphicsModelViewProjection& rModelViewProjection)
+void pkGraphics_Initialise(PkGraphicsModelViewProjection& rModelViewProjection)
 {
-    s_pGraphicsWindow = &rGraphicsWindow;
     s_pGraphicsModelViewProjection = &rModelViewProjection;
 
-    pkGraphicsBackend_Initialise(*rGraphicsWindow.pWindow);
+    pkGraphicsBackend_Initialise();
     app.initVulkan();
 }
 
@@ -1315,7 +1315,6 @@ void pkGraphics_Cleanup()
     pkGraphicsBackend_Cleanup();
 
     s_pGraphicsModelViewProjection = nullptr;
-    s_pGraphicsWindow = nullptr;
 }
 
 void pkGraphics_Render()

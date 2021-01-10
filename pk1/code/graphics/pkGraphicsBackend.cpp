@@ -2,14 +2,13 @@
 
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSurface.h"
+#include "graphics/pkGraphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #include <iostream>
 #include <set>
-
-static GLFWwindow* s_pWindow = nullptr;
 
 VkDebugUtilsMessengerEXT s_debugMessenger;
 VmaAllocator s_allocator;
@@ -410,14 +409,12 @@ VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount()
     return s_msaaSamples;
 }
 
-void pkGraphicsBackend_Initialise(GLFWwindow& rWindow)
+void pkGraphicsBackend_Initialise()
 {
-    s_pWindow = &rWindow;
-
     createInstance();
     setupDebugMessenger();
 
-    pkGraphicsSurface_Create(s_instance, s_pWindow);
+    pkGraphicsSurface_Create(s_instance);
 
     pickPhysicalDevice();
     createLogicalDevice();
@@ -441,6 +438,4 @@ void pkGraphicsBackend_Cleanup()
     pkGraphicsSurface_Destroy(s_instance);
 
     vkDestroyInstance(s_instance, nullptr);
-
-    s_pWindow = nullptr;
 }

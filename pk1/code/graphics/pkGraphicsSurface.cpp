@@ -1,5 +1,7 @@
 #include "pkGraphicsSurface.h"
 
+#include "graphics/pkGraphicsWindow.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -7,9 +9,9 @@
 
 VkSurfaceKHR s_surface;
 
-void pkGraphicsSurface_Create(VkInstance instance, GLFWwindow* pWindow)
+void pkGraphicsSurface_Create(VkInstance instance)
 {
-    if (glfwCreateWindowSurface(instance, pWindow, nullptr, &s_surface) != VK_SUCCESS)
+    if (glfwCreateWindowSurface(instance, pkGraphicsWindow_GetWindow(), nullptr, &s_surface) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create window surface!");
     }

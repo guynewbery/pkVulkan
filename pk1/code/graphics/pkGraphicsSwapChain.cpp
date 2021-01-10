@@ -2,6 +2,7 @@
 
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSurface.h"
+#include "graphics/pkGraphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -34,7 +35,7 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& avai
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwindow* pWindow)
+VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
     if (capabilities.currentExtent.width != UINT32_MAX)
     {
@@ -43,7 +44,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwi
     else
     {
         int width, height;
-        glfwGetFramebufferSize(pWindow, &width, &height);
+        glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
 
         VkExtent2D actualExtent =
         {
@@ -58,13 +59,13 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities, GLFWwi
     }
 }
 
-void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, GLFWwindow* pWindow)
+void pkGraphicsSwapChain_Create(PkGraphicsSwapChain& rSwapChain, VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device)
 {
     PkGraphicsUtilsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, pWindow);
+    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
     if (swapChainSupport.capabilities.maxImageCount > 0 && imageCount > swapChainSupport.capabilities.maxImageCount)

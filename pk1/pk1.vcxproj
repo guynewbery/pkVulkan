@@ -26,6 +26,7 @@
     <ClCompile Include="code\graphics\pkGraphicsSurface.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsUtils.cpp" />
+    <ClCompile Include="code\graphics\pkGraphicsWindow.cpp" />
     <ClCompile Include="code\main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -36,6 +37,7 @@
     <ClInclude Include="code\graphics\pkGraphicsSurface.h" />
     <ClInclude Include="code\graphics\pkGraphicsSwapChain.h" />
     <ClInclude Include="code\graphics\pkGraphicsUtils.h" />
+    <ClInclude Include="code\graphics\pkGraphicsWindow.h" />
     <ClInclude Include="code\library_macros.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
