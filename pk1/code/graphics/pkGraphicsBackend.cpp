@@ -8,18 +8,19 @@
 
 static GLFWwindow* s_pWindow = nullptr;
 
-VkInstance s_instance;
 VkDebugUtilsMessengerEXT s_debugMessenger;
+
+VkInstance s_instance;
 VkSurfaceKHR s_surface;
-
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
-VkSampleCountFlagBits s_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 VkDevice s_device;
-
 VmaAllocator s_allocator;
+VkCommandPool s_commandPool;
 
 VkQueue s_graphicsQueue;
 VkQueue s_presentQueue;
+
+VkSampleCountFlagBits s_msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
 const std::vector<const char*> validationLayers = 
 {
@@ -331,35 +332,18 @@ void createAllocator()
     }
 }
 
-VkDevice pkGraphicsBackend_Initialise(GLFWwindow& rWindow)
+void createCommandPool()
 {
-    s_pWindow = &rWindow;
+    PkGraphicsBackendQueueFamilyIndices queueFamilyIndices = pkGraphicsBackend_FindQueueFamilies(s_physicalDevice);
 
-    createInstance();
-    setupDebugMessenger();
-    createSurface();
-    pickPhysicalDevice();
-    createLogicalDevice();
-    createAllocator();
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-    return s_device;
-}
-
-void pkGraphicsBackend_Cleanup()
-{
-    vmaDestroyAllocator(s_allocator);
-
-    vkDestroyDevice(s_device, nullptr);
-
-    if (enableValidationLayers)
+    if (vkCreateCommandPool(s_device, &poolInfo, nullptr, &s_commandPool) != VK_SUCCESS)
     {
-        DestroyDebugUtilsMessengerEXT(s_debugMessenger, nullptr);
+        throw std::runtime_error("failed to create graphics command pool!");
     }
-
-    vkDestroySurfaceKHR(s_instance, s_surface, nullptr);
-    vkDestroyInstance(s_instance, nullptr);
-
-    s_pWindow = nullptr;
 }
 
 PkGraphicsBackendSwapChainSupport pkGraphicsBackend_QuerySwapChainSupport(VkPhysicalDevice physicalDevice)
@@ -461,9 +445,24 @@ VkPhysicalDevice pkGraphicsBackend_GetPhysicalDevice()
     return s_physicalDevice;
 }
 
-VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount()
+VkDevice pkGraphicsBackend_GetDevice()
 {
-    return s_msaaSamples;
+    return s_device;
+}
+
+VkCommandPool pkGraphicsBackend_GetCommandPool()
+{
+    return s_commandPool;
+}
+
+VkQueue pkGraphicsBackend_GetGraphicsQueue()
+{
+    return s_graphicsQueue;
+}
+
+VkQueue pkGraphicsBackend_GetPresentQueue()
+{
+    return s_presentQueue;
 }
 
 void pkGraphicsBackend_GetPhysicalDeviceProperties(VkPhysicalDeviceProperties* physicalDeviceProperties)
@@ -476,12 +475,39 @@ void pkGraphicsBackend_GetFormatProperties(VkFormat imageFormat, VkFormatPropert
     vkGetPhysicalDeviceFormatProperties(s_physicalDevice, imageFormat, formatProperties);
 }
 
-VkQueue pkGraphicsBackend_GetGraphicsQueue()
+VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount()
 {
-    return s_graphicsQueue;
+    return s_msaaSamples;
 }
 
-VkQueue pkGraphicsBackend_GetPresentQueue()
+void pkGraphicsBackend_Initialise(GLFWwindow& rWindow)
 {
-    return s_presentQueue;
+    s_pWindow = &rWindow;
+
+    createInstance();
+    setupDebugMessenger();
+    createSurface();
+    pickPhysicalDevice();
+    createLogicalDevice();
+    createAllocator();
+    createCommandPool();
+}
+
+void pkGraphicsBackend_Cleanup()
+{
+    vkDestroyCommandPool(s_device, s_commandPool, nullptr);
+
+    vmaDestroyAllocator(s_allocator);
+
+    vkDestroyDevice(s_device, nullptr);
+
+    if (enableValidationLayers)
+    {
+        DestroyDebugUtilsMessengerEXT(s_debugMessenger, nullptr);
+    }
+
+    vkDestroySurfaceKHR(s_instance, s_surface, nullptr);
+    vkDestroyInstance(s_instance, nullptr);
+
+    s_pWindow = nullptr;
 }

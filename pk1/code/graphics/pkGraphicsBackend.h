@@ -27,9 +27,6 @@ struct PkGraphicsBackendQueueFamilyIndices
     }
 };
 
-VkDevice pkGraphicsBackend_Initialise(GLFWwindow& rWindow);
-void pkGraphicsBackend_Cleanup();
-
 PkGraphicsBackendSwapChainSupport pkGraphicsBackend_QuerySwapChainSupport(VkPhysicalDevice physicalDevice);
 PkGraphicsBackendQueueFamilyIndices pkGraphicsBackend_FindQueueFamilies(VkPhysicalDevice physicalDevice);
 VkFormat pkGraphicsBackend_FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
@@ -37,10 +34,16 @@ VkFormat pkGraphicsBackend_FindSupportedFormat(const std::vector<VkFormat>& cand
 VmaAllocator pkGraphicsBackend_GetAllocator();
 VkSurfaceKHR pkGraphicsBackend_GetSurface();
 VkPhysicalDevice pkGraphicsBackend_GetPhysicalDevice();
-VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount();
+VkDevice pkGraphicsBackend_GetDevice();
+VkCommandPool pkGraphicsBackend_GetCommandPool();
+
+VkQueue pkGraphicsBackend_GetGraphicsQueue();
+VkQueue pkGraphicsBackend_GetPresentQueue();
 
 void pkGraphicsBackend_GetPhysicalDeviceProperties(VkPhysicalDeviceProperties* physicalDeviceProperties);
 void pkGraphicsBackend_GetFormatProperties(VkFormat imageFormat, VkFormatProperties* formatProperties);
 
-VkQueue pkGraphicsBackend_GetGraphicsQueue();
-VkQueue pkGraphicsBackend_GetPresentQueue();
+VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount();
+
+void pkGraphicsBackend_Initialise(GLFWwindow& rWindow);
+void pkGraphicsBackend_Cleanup();
