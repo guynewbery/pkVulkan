@@ -197,12 +197,7 @@ public:
         vkDestroyPipelineLayout(pkGraphicsBackend_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphicsBackend_GetDevice(), renderPass, nullptr);
 
-        //for (auto imageView : swapChainImageViews) 
-        //{
-        //    vkDestroyImageView(pkGraphicsBackend_GetDevice(), imageView, nullptr);
-        //}
-        //
-        //vkDestroySwapchainKHR(pkGraphicsBackend_GetDevice(), swapChain, nullptr);
+        pkGraphicsSwapChain_Destroy(s_swapChain, pkGraphicsBackend_GetDevice());
 
         for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
         {
@@ -248,8 +243,8 @@ public:
 
         cleanupSwapChain();
 
-        //createSwapChain();
-        //createImageViews();
+        pkGraphicsSwapChain_Create(s_swapChain, pkGraphicsBackend_GetInstance(), pkGraphicsBackend_GetPhysicalDevice(), pkGraphicsBackend_GetDevice());
+
         createRenderPass();
         createGraphicsPipeline();
         createColorResources();
@@ -1197,17 +1192,20 @@ public:
         uint32_t imageIndex;
         VkResult result = vkAcquireNextImageKHR(pkGraphicsBackend_GetDevice(), s_swapChain.swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        if (result == VK_ERROR_OUT_OF_DATE_KHR)
+        {
             recreateSwapChain();
             return;
         }
-        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
+        {
             throw std::runtime_error("failed to acquire swap chain image!");
         }
 
         updateUniformBuffer(imageIndex);
 
-        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) 
+        {
             vkWaitForFences(pkGraphicsBackend_GetDevice(), 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
         }
         imagesInFlight[imageIndex] = inFlightFences[currentFrame];
@@ -1230,7 +1228,8 @@ public:
 
         vkResetFences(pkGraphicsBackend_GetDevice(), 1, &inFlightFences[currentFrame]);
 
-        if (vkQueueSubmit(pkGraphicsBackend_GetGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(pkGraphicsBackend_GetGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) 
+        {
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 
@@ -1269,7 +1268,8 @@ public:
         createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
 
         VkShaderModule shaderModule;
-        if (vkCreateShaderModule(pkGraphicsBackend_GetDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        if (vkCreateShaderModule(pkGraphicsBackend_GetDevice(), &createInfo, nullptr, &shaderModule) != VK_SUCCESS)
+        {
             throw std::runtime_error("failed to create shader module!");
         }
 
