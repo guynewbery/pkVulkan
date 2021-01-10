@@ -15,8 +15,8 @@ struct UniformBufferObject
 
 struct PkGraphicsSwapChain
 {
-	int width = 0;
-	int height = 0;
+	//int width = 0;
+	//int height = 0;
 
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 	std::vector<VkImage> swapChainImages;
