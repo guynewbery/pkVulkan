@@ -12,8 +12,7 @@ struct PkGraphicsModelViewProjection
     float farViewPlane = 100.0f;
 };
 
-void pkGraphics_Initialise(PkGraphicsModelViewProjection& rModelViewProjection);
-void pkGraphics_Cleanup();
+void pkGraphicsTest_Initialise(PkGraphicsModelViewProjection& rModelViewProjection);
+void pkGraphicsTest_Cleanup();
 
-void pkGraphics_UpdateModelViewProjection(const glm::mat4& rModel, const glm::mat4& rView, const float fieldOfView);
-void pkGraphics_Render();
+void pkGraphicsTest_Render();

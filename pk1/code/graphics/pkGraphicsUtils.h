@@ -28,3 +28,5 @@ struct PkGraphicsUtilsQueueFamilyIndices
 PkGraphicsUtilsQueueFamilyIndices pkGraphicsUtils_FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 
 VkImageView pkGraphicsUtils_CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+
+VkFormat pkGraphicsUtils_FindSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);

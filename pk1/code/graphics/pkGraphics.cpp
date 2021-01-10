@@ -1,4 +1,4 @@
-#include "pkGraphicsBackend.h"
+#include "pkGraphics.h"
 
 #include "graphics/pkGraphicsUtils.h"
 #include "graphics/pkGraphicsSurface.h"
@@ -219,7 +219,7 @@ bool isDeviceSuitable(VkPhysicalDevice physicalDevice)
 VkSampleCountFlagBits getMaxUsableSampleCount() 
 {
     VkPhysicalDeviceProperties physicalDeviceProperties;
-    pkGraphicsBackend_GetPhysicalDeviceProperties(&physicalDeviceProperties);
+    pkGraphics_GetPhysicalDeviceProperties(&physicalDeviceProperties);
 
     VkSampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
     if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
@@ -339,77 +339,57 @@ void createCommandPool()
     }
 }
 
-VkFormat pkGraphicsBackend_FindSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) 
-{
-    for (VkFormat format : candidates) 
-    {
-        VkFormatProperties props;
-        vkGetPhysicalDeviceFormatProperties(s_physicalDevice, format, &props);
-
-        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) 
-        {
-            return format;
-        }
-        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) 
-        {
-            return format;
-        }
-    }
-
-    throw std::runtime_error("failed to find supported format!");
-}
-
-VmaAllocator pkGraphicsBackend_GetAllocator()
+VmaAllocator pkGraphics_GetAllocator()
 {
     return s_allocator;
 }
 
-VkInstance pkGraphicsBackend_GetInstance()
+VkInstance pkGraphics_GetInstance()
 {
     return s_instance;
 }
 
-VkPhysicalDevice pkGraphicsBackend_GetPhysicalDevice()
+VkPhysicalDevice pkGraphics_GetPhysicalDevice()
 {
     return s_physicalDevice;
 }
 
-VkDevice pkGraphicsBackend_GetDevice()
+VkDevice pkGraphics_GetDevice()
 {
     return s_device;
 }
 
-VkCommandPool pkGraphicsBackend_GetCommandPool()
+VkCommandPool pkGraphics_GetCommandPool()
 {
     return s_commandPool;
 }
 
-VkQueue pkGraphicsBackend_GetGraphicsQueue()
+VkQueue pkGraphics_GetGraphicsQueue()
 {
     return s_graphicsQueue;
 }
 
-VkQueue pkGraphicsBackend_GetPresentQueue()
+VkQueue pkGraphics_GetPresentQueue()
 {
     return s_presentQueue;
 }
 
-void pkGraphicsBackend_GetPhysicalDeviceProperties(VkPhysicalDeviceProperties* physicalDeviceProperties)
+void pkGraphics_GetPhysicalDeviceProperties(VkPhysicalDeviceProperties* physicalDeviceProperties)
 {
     vkGetPhysicalDeviceProperties(s_physicalDevice, physicalDeviceProperties);
 }
 
-void pkGraphicsBackend_GetFormatProperties(VkFormat imageFormat, VkFormatProperties* formatProperties)
+void pkGraphics_GetFormatProperties(VkFormat imageFormat, VkFormatProperties* formatProperties)
 {
     vkGetPhysicalDeviceFormatProperties(s_physicalDevice, imageFormat, formatProperties);
 }
 
-VkSampleCountFlagBits pkGraphicsBackend_GetMaxMsaaSampleCount()
+VkSampleCountFlagBits pkGraphics_GetMaxMsaaSampleCount()
 {
     return s_msaaSamples;
 }
 
-void pkGraphicsBackend_Initialise()
+void pkGraphics_Initialise()
 {
     createInstance();
     setupDebugMessenger();
@@ -422,7 +402,7 @@ void pkGraphicsBackend_Initialise()
     createCommandPool();
 }
 
-void pkGraphicsBackend_Cleanup()
+void pkGraphics_Cleanup()
 {
     vkDestroyCommandPool(s_device, s_commandPool, nullptr);
 

@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include "graphics/pkGraphics.h"
 #include "graphics/pkGraphicsTest.h"
 #include "graphics/pkGraphicsWindow.h"
 #include "camera/pkCamera.h"
@@ -28,7 +29,7 @@ static void gameUpdate()
 	glfwPollEvents();
 
 	pkCamera_Update(s_graphicsModelViewProjection, dt);
-	pkGraphics_Render();
+	pkGraphicsTest_Render();
 }
 
 static void gameInitialise()
@@ -41,13 +42,15 @@ static void gameInitialise()
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
 	pkGraphicsWindow_Create(windowName);
 
-	pkGraphics_Initialise(s_graphicsModelViewProjection);
+	pkGraphics_Initialise();
+	pkGraphicsTest_Initialise(s_graphicsModelViewProjection);
 //	graphicsImgui_Initialise(s_graphicsWindow.pWindow);
 }
 
 static void gameCleanup()
 {
 //	graphicsImgui_Cleanup();
+	pkGraphicsTest_Cleanup();
 	pkGraphics_Cleanup();
 
 	pkGraphicsWindow_Destroy();

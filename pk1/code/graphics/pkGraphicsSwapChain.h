@@ -4,8 +4,6 @@
 
 #include <vector>
 
-struct GLFWwindow;
-
 struct PkGraphicsSwapChain
 {
 	int width;

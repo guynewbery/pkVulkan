@@ -22,7 +22,7 @@
     <ClCompile Include="code\camera\pkCamera.cpp" />
     <ClCompile Include="code\game.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsTest.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsBackend.cpp" />
+    <ClCompile Include="code\graphics\pkGraphics.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsSurface.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsUtils.cpp" />
@@ -33,7 +33,7 @@
     <ClInclude Include="code\camera\pkCamera.h" />
     <ClInclude Include="code\game.h" />
     <ClInclude Include="code\graphics\pkGraphicsTest.h" />
-    <ClInclude Include="code\graphics\pkGraphicsBackend.h" />
+    <ClInclude Include="code\graphics\pkGraphics.h" />
     <ClInclude Include="code\graphics\pkGraphicsSurface.h" />
     <ClInclude Include="code\graphics\pkGraphicsSwapChain.h" />
     <ClInclude Include="code\graphics\pkGraphicsUtils.h" />
