@@ -118,11 +118,11 @@ public:
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
-    PkGpuImage colorImage;
-    PkGpuImage depthImage;
+    VkImage textureImage;
+    VkImageView textureImageView;
+    VmaAllocation textureImageAllocation;
 
     uint32_t mipLevels;
-    PkGpuImage textureImage;
     VkSampler textureSampler;
 
     std::vector<InstanceData> instances;
@@ -157,10 +157,7 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
-
-        createColorResources();
-        createDepthResources();
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
         createDescriptorSets();
 
         createRenderPass();
@@ -186,10 +183,7 @@ public:
 
         cleanupSwapChain();
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
-
-        createColorResources();
-        createDepthResources();
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
         createDescriptorSets();
 
         createRenderPass();
@@ -200,12 +194,6 @@ public:
 
     void cleanupSwapChain() 
     {
-        vkDestroyImageView(pkGraphics_GetDevice(), depthImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), depthImage.image, depthImage.allocation);
-
-        vkDestroyImageView(pkGraphics_GetDevice(), colorImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), colorImage.image, colorImage.allocation);
-
         for (auto framebuffer : swapChainFramebuffers) 
         {
             vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
@@ -226,8 +214,8 @@ public:
 
         vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
 
-        vkDestroyImageView(pkGraphics_GetDevice(), textureImage.imageView, nullptr);
-        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage.image, textureImage.allocation);
+        vkDestroyImageView(pkGraphics_GetDevice(), textureImageView, nullptr);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage, textureImageAllocation);
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), indexBuffer, indexBufferAllocation);
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), vertexBuffer, vertexBufferAllocation);
@@ -253,7 +241,7 @@ public:
         colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = findDepthFormat();
+        depthAttachment.format = pkGraphicsUtils_FindDepthFormat(pkGraphics_GetPhysicalDevice());
         depthAttachment.samples = pkGraphics_GetMaxMsaaSampleCount();
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -453,8 +441,8 @@ public:
         {
             std::array<VkImageView, 3> attachments = 
             {
-                colorImage.imageView,
-                depthImage.imageView,
+                pkGraphicsSwapChain_GetSwapChain().colorImageView,
+                pkGraphicsSwapChain_GetSwapChain().depthImageView,
                 pkGraphicsSwapChain_GetSwapChain().swapChainImageViews[i]
             };
 
@@ -472,29 +460,6 @@ public:
                 throw std::runtime_error("failed to create framebuffer!");
             }
         }
-    }
-
-    void createColorResources() 
-    {
-        VkFormat colorFormat = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
-        createImage(pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width, pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
-    }
-
-    void createDepthResources() 
-    {
-        VkFormat depthFormat = findDepthFormat();
-        createImage(pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width, pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
-    }
-
-    VkFormat findDepthFormat() 
-    {
-        return pkGraphicsUtils_FindSupportedFormat
-        (
-            pkGraphics_GetPhysicalDevice(),
-            { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-        );
     }
 
     void createTextureImage() 
@@ -520,15 +485,15 @@ public:
 
         stbi_image_free(pixels);
 
-        createImage(texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage);
+        pkGraphicsUtils_CreateImage(pkGraphics_GetDevice(), texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageView, textureImageAllocation);
 
-        transitionImageLayout(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-        copyBufferToImage(stagingBuffer, textureImage.image, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
+        copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
 
-        generateMipmaps(textureImage.image, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
+        generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
     }
 
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) 
@@ -648,35 +613,6 @@ public:
         {
             throw std::runtime_error("failed to create texture sampler!");
         }
-    }
-
-    void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageAspectFlags aspectFlags, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, PkGpuImage& image)
-    {
-        VkImageCreateInfo imageInfo{};
-        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        imageInfo.imageType = VK_IMAGE_TYPE_2D;
-        imageInfo.extent.width = width;
-        imageInfo.extent.height = height;
-        imageInfo.extent.depth = 1;
-        imageInfo.mipLevels = mipLevels;
-        imageInfo.arrayLayers = 1;
-        imageInfo.format = format;
-        imageInfo.tiling = tiling;
-        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        imageInfo.usage = usage;
-        imageInfo.samples = numSamples;
-        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-        VmaAllocationCreateInfo allocInfo = {};
-        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-        allocInfo.requiredFlags = properties;
-
-        if (vmaCreateImage(pkGraphicsAllocator_GetAllocator(), &imageInfo, &allocInfo, &image.image, &image.allocation, nullptr) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to create buffer!");
-        }
-
-        image.imageView = pkGraphicsUtils_CreateImageView(pkGraphics_GetDevice(), image.image, format, aspectFlags, mipLevels);
     }
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) 
@@ -919,7 +855,7 @@ public:
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = textureImage.imageView;
+            imageInfo.imageView = textureImageView;
             imageInfo.sampler = textureSampler;
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites{};

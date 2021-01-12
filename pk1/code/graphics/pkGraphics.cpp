@@ -429,6 +429,7 @@ void pkGraphics_Cleanup()
     pkGraphicsAllocator_Destroy();
 
     vkDestroyDevice(s_device, nullptr);
+
     pkGraphicsSurface_Destroy(s_instance);
 
     if (enableValidationLayers)

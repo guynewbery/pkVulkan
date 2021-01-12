@@ -34,6 +34,10 @@ VkImageView pkGraphicsUtils_CreateImageView(VkDevice device, VkImage image, VkFo
 
 VkFormat pkGraphicsUtils_FindSupportedFormat(VkPhysicalDevice physicalDevice, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
+VkFormat pkGraphicsUtils_FindDepthFormat(VkPhysicalDevice physicalDevice);
+
 VkCommandBuffer pkGraphicsUtils_BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
 
 void pkGraphicsUtils_EndSingleTimeCommands(VkDevice device, VkQueue queue, VkCommandPool commandPool, VkCommandBuffer commandBuffer);
+
+void pkGraphicsUtils_CreateImage(VkDevice device, uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageAspectFlags aspectFlags, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkImageView& imageView, VmaAllocation& imageAllocation);

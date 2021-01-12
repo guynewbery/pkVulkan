@@ -68,7 +68,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     }
 }
 
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device)
+void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSampleCountFlagBits maxMsaaSampleCount)
 {
     PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
 
@@ -154,10 +154,21 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
+
+    pkGraphicsUtils_CreateImage(device, s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, maxMsaaSampleCount, s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.colorImage, s_swapChain.colorImageView, s_swapChain.colorImageAllocation);
+ 
+    VkFormat depthFormat = pkGraphicsUtils_FindDepthFormat(physicalDevice);
+    pkGraphicsUtils_CreateImage(device, s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, maxMsaaSampleCount, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.depthImage, s_swapChain.depthImageView, s_swapChain.depthImageAllocation);
 }
 
 void pkGraphicsSwapChain_Destroy(VkDevice device)
 {
+    vkDestroyImageView(device, s_swapChain.depthImageView, nullptr);
+    vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.depthImage, s_swapChain.depthImageAllocation);
+
+    vkDestroyImageView(device, s_swapChain.colorImageView, nullptr);
+    vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.colorImage, s_swapChain.colorImageAllocation);
+
     vkDestroyDescriptorPool(device, s_swapChain.descriptorPool, nullptr);
 
     for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)

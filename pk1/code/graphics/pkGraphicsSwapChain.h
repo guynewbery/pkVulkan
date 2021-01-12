@@ -31,9 +31,17 @@ struct PkGraphicsSwapChain
 	std::vector<VmaAllocation> uniformBufferAllocations;
 
 	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+
+	VkImage colorImage;
+	VkImageView colorImageView;
+	VmaAllocation colorImageAllocation;
+
+	VkImage depthImage;
+	VkImageView depthImageView;
+	VmaAllocation depthImageAllocation;
 };
 
 PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain();
 
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device);
+void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSampleCountFlagBits maxMsaaSampleCount);
 void pkGraphicsSwapChain_Destroy(VkDevice device);
