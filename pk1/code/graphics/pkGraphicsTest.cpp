@@ -141,6 +141,11 @@ public:
 
     std::vector<VkCommandBuffer> commandBuffers;
 
+
+
+
+
+
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
     std::vector<VkFence> inFlightFences;
@@ -149,6 +154,8 @@ public:
 
     void initVulkan() 
     {
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
+
         createTextureImage();
         createTextureSampler();
         populateInstanceData();
@@ -157,9 +164,7 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
         createDescriptorSets();
-
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
@@ -181,20 +186,35 @@ public:
 
         vkDeviceWaitIdle(pkGraphics_GetDevice());
 
-        cleanupSwapChain();
+        {
+            for (auto framebuffer : swapChainFramebuffers)
+            {
+                vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
+            }
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
-        createDescriptorSets();
+            vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        createRenderPass();
-        createGraphicsPipeline();
-        createFramebuffers();
-        createCommandBuffers();
+            vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
+            vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
+            vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
+
+            pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
+        }
+
+        {
+            pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
+
+            createDescriptorSets();
+            createRenderPass();
+            createGraphicsPipeline();
+            createFramebuffers();
+            createCommandBuffers();
+        }
     }
 
-    void cleanupSwapChain() 
+    void cleanup() 
     {
-        for (auto framebuffer : swapChainFramebuffers) 
+        for (auto framebuffer : swapChainFramebuffers)
         {
             vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
         }
@@ -204,13 +224,6 @@ public:
         vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
-
-        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
-    }
-
-    void cleanup() 
-    {
-        cleanupSwapChain();
 
         vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
 
@@ -226,6 +239,8 @@ public:
             vkDestroySemaphore(pkGraphics_GetDevice(), imageAvailableSemaphores[i], nullptr);
             vkDestroyFence(pkGraphics_GetDevice(), inFlightFences[i], nullptr);
         }
+
+        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
     }
 
     void createRenderPass() 
