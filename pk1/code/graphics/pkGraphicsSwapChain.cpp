@@ -11,6 +11,13 @@
 #include <iostream>
 #include <array>
 
+static PkGraphicsSwapChain s_swapChain;
+
+PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain()
+{
+    return s_swapChain;
+}
+
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
     for (const auto& availableFormat : availableFormats)
@@ -61,7 +68,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     }
 }
 
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, PkGraphicsSwapChain& rSwapChain)
+void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device)
 {
     PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, pkGraphicsSurface_GetSurface());
 
@@ -105,65 +112,65 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &rSwapChain.swapChain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &s_swapChain.swapChain) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create swap chain!");
     }
 
-    vkGetSwapchainImagesKHR(device, rSwapChain.swapChain, &imageCount, nullptr);
-    rSwapChain.swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device, rSwapChain.swapChain, &imageCount, rSwapChain.swapChainImages.data());
+    vkGetSwapchainImagesKHR(device, s_swapChain.swapChain, &imageCount, nullptr);
+    s_swapChain.swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(device, s_swapChain.swapChain, &imageCount, s_swapChain.swapChainImages.data());
 
-    rSwapChain.swapChainImageFormat = surfaceFormat.format;
-    rSwapChain.swapChainExtent = extent;
+    s_swapChain.swapChainImageFormat = surfaceFormat.format;
+    s_swapChain.swapChainExtent = extent;
 
-    rSwapChain.swapChainImageViews.resize(rSwapChain.swapChainImages.size());
-    for (uint32_t i = 0; i < rSwapChain.swapChainImages.size(); i++)
+    s_swapChain.swapChainImageViews.resize(s_swapChain.swapChainImages.size());
+    for (uint32_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
     {
-        rSwapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, rSwapChain.swapChainImages[i], rSwapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        s_swapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, s_swapChain.swapChainImages[i], s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 
     VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-    rSwapChain.uniformBuffers.resize(rSwapChain.swapChainImages.size());
-    rSwapChain.uniformBufferAllocations.resize(rSwapChain.swapChainImages.size());
-    for (size_t i = 0; i < rSwapChain.swapChainImages.size(); i++)
+    s_swapChain.uniformBuffers.resize(s_swapChain.swapChainImages.size());
+    s_swapChain.uniformBufferAllocations.resize(s_swapChain.swapChainImages.size());
+    for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
     {
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &rSwapChain.uniformBuffers[i], &rSwapChain.uniformBufferAllocations[i]);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &s_swapChain.uniformBuffers[i], &s_swapChain.uniformBufferAllocations[i]);
     }
 
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(rSwapChain.swapChainImages.size());
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(rSwapChain.swapChainImages.size());
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(rSwapChain.swapChainImages.size());
+    poolInfo.maxSets = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
 
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &rSwapChain.descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &s_swapChain.descriptorPool) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
 
-void pkGraphicsSwapChain_Destroy(VkDevice device, PkGraphicsSwapChain& rSwapChain)
+void pkGraphicsSwapChain_Destroy(VkDevice device)
 {
-    vkDestroyDescriptorPool(device, rSwapChain.descriptorPool, nullptr);
+    vkDestroyDescriptorPool(device, s_swapChain.descriptorPool, nullptr);
 
-    for (size_t i = 0; i < rSwapChain.swapChainImages.size(); i++)
+    for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
     {
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), rSwapChain.uniformBuffers[i], rSwapChain.uniformBufferAllocations[i]);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBuffers[i], s_swapChain.uniformBufferAllocations[i]);
     }
 
-    for (VkImageView imageView : rSwapChain.swapChainImageViews)
+    for (VkImageView imageView : s_swapChain.swapChainImageViews)
     {
         vkDestroyImageView(device, imageView, nullptr);
     }
 
-    vkDestroySwapchainKHR(device, rSwapChain.swapChain, nullptr);
+    vkDestroySwapchainKHR(device, s_swapChain.swapChain, nullptr);
 }
 
 /*

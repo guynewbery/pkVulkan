@@ -29,7 +29,6 @@
 #include <unordered_map>
 
 static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
-static PkGraphicsSwapChain s_swapChain;
 
 const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
@@ -158,7 +157,7 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
 
         createColorResources();
         createDepthResources();
@@ -187,7 +186,7 @@ public:
 
         cleanupSwapChain();
 
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), s_swapChain);
+        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice());
 
         createColorResources();
         createDepthResources();
@@ -218,7 +217,7 @@ public:
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
 
-        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice(), s_swapChain);
+        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
     }
 
     void cleanup() 
@@ -244,7 +243,7 @@ public:
     void createRenderPass() 
     {
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = s_swapChain.swapChainImageFormat;
+        colorAttachment.format = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
         colorAttachment.samples = pkGraphics_GetMaxMsaaSampleCount();
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -264,7 +263,7 @@ public:
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription colorAttachmentResolve{};
-        colorAttachmentResolve.format = s_swapChain.swapChainImageFormat;
+        colorAttachmentResolve.format = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -357,14 +356,14 @@ public:
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)s_swapChain.swapChainExtent.width;
-        viewport.height = (float)s_swapChain.swapChainExtent.height;
+        viewport.width = (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
+        viewport.height = (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = s_swapChain.swapChainExtent;
+        scissor.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -448,15 +447,15 @@ public:
 
     void createFramebuffers() 
     {
-        swapChainFramebuffers.resize(s_swapChain.swapChainImageViews.size());
+        swapChainFramebuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
 
-        for (size_t i = 0; i < s_swapChain.swapChainImageViews.size(); i++)
+        for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
         {
             std::array<VkImageView, 3> attachments = 
             {
                 colorImage.imageView,
                 depthImage.imageView,
-                s_swapChain.swapChainImageViews[i]
+                pkGraphicsSwapChain_GetSwapChain().swapChainImageViews[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
@@ -464,8 +463,8 @@ public:
             framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = s_swapChain.swapChainExtent.width;
-            framebufferInfo.height = s_swapChain.swapChainExtent.height;
+            framebufferInfo.width = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
+            framebufferInfo.height = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
             framebufferInfo.layers = 1;
 
             if (vkCreateFramebuffer(pkGraphics_GetDevice(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) 
@@ -477,14 +476,14 @@ public:
 
     void createColorResources() 
     {
-        VkFormat colorFormat = s_swapChain.swapChainImageFormat;
-        createImage(s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
+        VkFormat colorFormat = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
+        createImage(pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width, pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage);
     }
 
     void createDepthResources() 
     {
         VkFormat depthFormat = findDepthFormat();
-        createImage(s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
+        createImage(pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width, pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height, 1, pkGraphics_GetMaxMsaaSampleCount(), depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depthImage);
     }
 
     VkFormat findDepthFormat() 
@@ -543,7 +542,7 @@ public:
             throw std::runtime_error("texture image format does not support linear blitting!");
         }
 
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -619,7 +618,7 @@ public:
             0, nullptr,
             1, &barrier);
 
-        endSingleTimeCommands(commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
     }
 
     void createTextureSampler() 
@@ -682,7 +681,7 @@ public:
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) 
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -730,12 +729,12 @@ public:
             1, &barrier
         );
 
-        endSingleTimeCommands(commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
     }
 
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) 
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -754,7 +753,7 @@ public:
 
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-        endSingleTimeCommands(commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
     }
 
     void populateInstanceData()
@@ -898,23 +897,23 @@ public:
 
     void createDescriptorSets() 
     {
-        std::vector<VkDescriptorSetLayout> layouts(s_swapChain.swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
+        std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = s_swapChain.descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
+        allocInfo.descriptorPool = pkGraphicsSwapChain_GetSwapChain().descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(s_swapChain.swapChainImages.size());
+        descriptorSets.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
         if (vkAllocateDescriptorSets(pkGraphics_GetDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS) 
         {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
+        for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(); i++)
         {
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = s_swapChain.uniformBuffers[i];
+            bufferInfo.buffer = pkGraphicsSwapChain_GetSwapChain().uniformBuffers[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -945,50 +944,15 @@ public:
         }
     }
 
-    VkCommandBuffer beginSingleTimeCommands() 
-    {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = pkGraphics_GetCommandPool();
-        allocInfo.commandBufferCount = 1;
-
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(pkGraphics_GetDevice(), &allocInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-        return commandBuffer;
-    }
-
-    void endSingleTimeCommands(VkCommandBuffer commandBuffer) 
-    {
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(pkGraphics_GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-        vkQueueWaitIdle(pkGraphics_GetGraphicsQueue());
-
-        vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), 1, &commandBuffer);
-    }
-
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
     {
-        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
 
         VkBufferCopy copyRegion{};
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-        endSingleTimeCommands(commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
     }
 
     void createCommandBuffers() 
@@ -1018,7 +982,7 @@ public:
             renderPassInfo.renderPass = renderPass;
             renderPassInfo.framebuffer = swapChainFramebuffers[i];
             renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = s_swapChain.swapChainExtent;
+            renderPassInfo.renderArea.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
 
             std::array<VkClearValue, 2> clearValues{};
             clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1058,7 +1022,7 @@ public:
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-        imagesInFlight.resize(s_swapChain.swapChainImages.size(), VK_NULL_HANDLE);
+        imagesInFlight.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), VK_NULL_HANDLE);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -1079,7 +1043,7 @@ public:
     void updateUniformBuffer(uint32_t currentImage) 
     {
         float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
-        float aspectRatio = s_swapChain.swapChainExtent.width / (float)s_swapChain.swapChainExtent.height;
+        float aspectRatio = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width / (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
         float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
         float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
 
@@ -1090,9 +1054,9 @@ public:
         ubo.proj[1][1] *= -1;
 
         void* data;
-        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBufferAllocations[currentImage], &data);
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage], &data);
         memcpy(data, &ubo, sizeof(ubo));
-        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBufferAllocations[currentImage]);
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage]);
     }
 
     void drawFrame() 
@@ -1100,7 +1064,7 @@ public:
         vkWaitForFences(pkGraphics_GetDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(pkGraphics_GetDevice(), s_swapChain.swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(pkGraphics_GetDevice(), pkGraphicsSwapChain_GetSwapChain().swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR)
         {
@@ -1149,7 +1113,7 @@ public:
         presentInfo.waitSemaphoreCount = 1;
         presentInfo.pWaitSemaphores = signalSemaphores;
 
-        VkSwapchainKHR swapChains[] = { s_swapChain.swapChain };
+        VkSwapchainKHR swapChains[] = { pkGraphicsSwapChain_GetSwapChain().swapChain };
         presentInfo.swapchainCount = 1;
         presentInfo.pSwapchains = swapChains;
 

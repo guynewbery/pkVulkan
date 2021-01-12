@@ -44,12 +44,10 @@ static void gameInitialise()
 
 	pkGraphics_Initialise();
 	pkGraphicsTest_Initialise(s_graphicsModelViewProjection);
-//	graphicsImgui_Initialise(s_graphicsWindow.pWindow);
 }
 
 static void gameCleanup()
 {
-//	graphicsImgui_Cleanup();
 	pkGraphicsTest_Cleanup();
 	pkGraphics_Cleanup();
 

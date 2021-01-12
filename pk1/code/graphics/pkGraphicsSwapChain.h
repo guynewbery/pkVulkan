@@ -33,5 +33,7 @@ struct PkGraphicsSwapChain
 	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
 };
 
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, PkGraphicsSwapChain& rSwapChain);
-void pkGraphicsSwapChain_Destroy(VkDevice device, PkGraphicsSwapChain& rSwapChain);
+PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain();
+
+void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device);
+void pkGraphicsSwapChain_Destroy(VkDevice device);
