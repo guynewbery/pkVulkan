@@ -1,18 +1,13 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <vulkan/vulkan_core.h>
 
-struct PkGraphicsModelViewProjection
-{
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
+#include <stdint.h>
 
-    float fieldOfView = 45.0f;
-    float nearViewPlane = 1.0f;
-    float farViewPlane = 100.0f;
-};
+VkCommandBuffer& pkGraphicsTest_GetCommandBuffer(uint32_t imageIndex);
 
-void pkGraphicsTest_Initialise(PkGraphicsModelViewProjection& rModelViewProjection);
+void pkGraphicsTest_OnSwapChainCreate();
+void pkGraphicsTest_OnSwapChainDestroy();
+
+void pkGraphicsTest_Initialise();
 void pkGraphicsTest_Cleanup();
-
-void pkGraphicsTest_Render();

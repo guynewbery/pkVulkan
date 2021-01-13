@@ -4,11 +4,11 @@
     <Filter Include="code">
       <UniqueIdentifier>{96c76f29-5e55-402c-a79f-3289e499172d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="code\pkGraphics">
-      <UniqueIdentifier>{4238882a-35e1-4061-9f70-ac24fe497aff}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="code\pPkCamera">
+    <Filter Include="code\camera">
       <UniqueIdentifier>{664b8d12-4fc0-45cd-a074-f011ff1cc5ba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="code\graphics">
+      <UniqueIdentifier>{4238882a-35e1-4061-9f70-ac24fe497aff}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -19,28 +19,28 @@
       <Filter>code</Filter>
     </ClCompile>
     <ClCompile Include="code\camera\pkCamera.cpp">
-      <Filter>code\pPkCamera</Filter>
+      <Filter>code\camera</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsSurface.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsUtils.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsTest.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsWindow.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphics.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -51,28 +51,28 @@
       <Filter>code</Filter>
     </ClInclude>
     <ClInclude Include="code\camera\pkCamera.h">
-      <Filter>code\pPkCamera</Filter>
+      <Filter>code\camera</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsSwapChain.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsSurface.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsUtils.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsTest.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsWindow.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphics.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsAllocator.h">
-      <Filter>code\pkGraphics</Filter>
+      <Filter>code\graphics</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

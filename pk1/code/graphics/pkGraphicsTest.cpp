@@ -28,12 +28,8 @@
 #include <array>
 #include <unordered_map>
 
-static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
-
 const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
-
-const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct InstanceData {
     glm::vec3 pos;
@@ -141,21 +137,8 @@ public:
 
     std::vector<VkCommandBuffer> commandBuffers;
 
-
-
-
-
-
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    std::vector<VkFence> imagesInFlight;
-    size_t currentFrame = 0;
-
     void initVulkan() 
     {
-        pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
-
         createTextureImage();
         createTextureSampler();
         populateInstanceData();
@@ -164,55 +147,33 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
+        onSwapChainCreate();
+    }
+
+    void cleanup()
+    {
+        onSwapChainDestroy();
+
+        vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
+
+        vkDestroyImageView(pkGraphics_GetDevice(), textureImageView, nullptr);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage, textureImageAllocation);
+
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), indexBuffer, indexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), vertexBuffer, vertexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), instanceBuffer, instanceBufferAllocation);
+    }
+
+    void onSwapChainCreate()
+    {
         createDescriptorSets();
         createRenderPass();
         createGraphicsPipeline();
         createFramebuffers();
         createCommandBuffers();
-
-        createSyncObjects();
     }
 
-    void recreateSwapChain()
-    {
-        int width = 0, height = 0;
-        glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
-
-        while (width == 0 || height == 0)
-        {
-            glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
-            glfwWaitEvents();
-        }
-
-        vkDeviceWaitIdle(pkGraphics_GetDevice());
-
-        {
-            for (auto framebuffer : swapChainFramebuffers)
-            {
-                vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
-            }
-
-            vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
-
-            vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
-            vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
-            vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
-
-            pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
-        }
-
-        {
-            pkGraphicsSwapChain_Create(pkGraphics_GetInstance(), pkGraphics_GetPhysicalDevice(), pkGraphics_GetDevice(), pkGraphics_GetMaxMsaaSampleCount());
-
-            createDescriptorSets();
-            createRenderPass();
-            createGraphicsPipeline();
-            createFramebuffers();
-            createCommandBuffers();
-        }
-    }
-
-    void cleanup() 
+    void onSwapChainDestroy()
     {
         for (auto framebuffer : swapChainFramebuffers)
         {
@@ -224,23 +185,6 @@ public:
         vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
-
-        vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
-
-        vkDestroyImageView(pkGraphics_GetDevice(), textureImageView, nullptr);
-        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage, textureImageAllocation);
-
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), indexBuffer, indexBufferAllocation);
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), vertexBuffer, vertexBufferAllocation);
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), instanceBuffer, instanceBufferAllocation);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(pkGraphics_GetDevice(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(pkGraphics_GetDevice(), imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(pkGraphics_GetDevice(), inFlightFences[i], nullptr);
-        }
-
-        pkGraphicsSwapChain_Destroy(pkGraphics_GetDevice());
     }
 
     void createRenderPass() 
@@ -968,123 +912,6 @@ public:
         }
     }
 
-    void createSyncObjects() 
-    {
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-        imagesInFlight.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), VK_NULL_HANDLE);
-
-        VkSemaphoreCreateInfo semaphoreInfo{};
-        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-        VkFenceCreateInfo fenceInfo{};
-        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(pkGraphics_GetDevice(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(pkGraphics_GetDevice(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(pkGraphics_GetDevice(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create synchronization objects for a frame!");
-            }
-        }
-    }
-
-    void updateUniformBuffer(uint32_t currentImage) 
-    {
-        float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
-        float aspectRatio = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width / (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
-        float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
-        float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
-
-        UniformBufferObject ubo{};
-        ubo.model = s_pGraphicsModelViewProjection->model;
-        ubo.view = s_pGraphicsModelViewProjection->view;
-        ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
-        ubo.proj[1][1] *= -1;
-
-        void* data;
-        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage], &data);
-        memcpy(data, &ubo, sizeof(ubo));
-        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage]);
-    }
-
-    void drawFrame() 
-    {
-        vkWaitForFences(pkGraphics_GetDevice(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
-
-        uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(pkGraphics_GetDevice(), pkGraphicsSwapChain_GetSwapChain().swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
-
-        if (result == VK_ERROR_OUT_OF_DATE_KHR)
-        {
-            recreateSwapChain();
-            return;
-        }
-        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) 
-        {
-            throw std::runtime_error("failed to acquire swap chain image!");
-        }
-
-        updateUniformBuffer(imageIndex);
-
-        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) 
-        {
-            vkWaitForFences(pkGraphics_GetDevice(), 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
-        }
-        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
-        VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = waitSemaphores;
-        submitInfo.pWaitDstStageMask = waitStages;
-
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
-
-        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = signalSemaphores;
-
-        vkResetFences(pkGraphics_GetDevice(), 1, &inFlightFences[currentFrame]);
-
-        if (vkQueueSubmit(pkGraphics_GetGraphicsQueue(), 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to submit draw command buffer!");
-        }
-
-        VkPresentInfoKHR presentInfo{};
-        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-        presentInfo.waitSemaphoreCount = 1;
-        presentInfo.pWaitSemaphores = signalSemaphores;
-
-        VkSwapchainKHR swapChains[] = { pkGraphicsSwapChain_GetSwapChain().swapChain };
-        presentInfo.swapchainCount = 1;
-        presentInfo.pSwapchains = swapChains;
-
-        presentInfo.pImageIndices = &imageIndex;
-
-        result = vkQueuePresentKHR(pkGraphics_GetPresentQueue(), &presentInfo);
-
-        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || pkGraphicsWindow_IsResized())
-        {
-            pkGraphicsWindow_ResetResized();
-            recreateSwapChain();
-        }
-        else if (result != VK_SUCCESS) 
-        {
-            throw std::runtime_error("failed to present swap chain image!");
-        }
-
-        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
-    }
-
     VkShaderModule createShaderModule(const std::vector<char>& code) 
     {
         VkShaderModuleCreateInfo createInfo{};
@@ -1124,23 +951,27 @@ public:
 
 HelloTriangleApplication app;
 
-void pkGraphicsTest_Initialise(PkGraphicsModelViewProjection& rModelViewProjection)
+VkCommandBuffer& pkGraphicsTest_GetCommandBuffer(uint32_t imageIndex)
 {
-    s_pGraphicsModelViewProjection = &rModelViewProjection;
+    return app.commandBuffers[imageIndex];
+}
 
+void pkGraphicsTest_OnSwapChainCreate()
+{
+    app.onSwapChainCreate();
+}
+
+void pkGraphicsTest_OnSwapChainDestroy()
+{
+    app.onSwapChainDestroy();
+}
+
+void pkGraphicsTest_Initialise()
+{
     app.initVulkan();
 }
 
 void pkGraphicsTest_Cleanup()
 {
-    vkDeviceWaitIdle(pkGraphics_GetDevice());
-
     app.cleanup();
-
-    s_pGraphicsModelViewProjection = nullptr;
-}
-
-void pkGraphicsTest_Render()
-{
-    app.drawFrame();
 }
