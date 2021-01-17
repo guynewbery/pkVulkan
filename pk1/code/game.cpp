@@ -52,7 +52,7 @@ static void gameUpdate()
 
 	graphicsImgui_Update();
 
-	pkGraphics_FrameRenderAndPresent();
+	pkGraphics_RenderAndPresentFrame();
 }
 
 static void gameInitialise()

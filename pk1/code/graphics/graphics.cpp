@@ -484,7 +484,7 @@ VkSampleCountFlagBits pkGraphics_GetMaxMsaaSampleCount()
     return s_msaaSamples;
 }
 
-void pkGraphics_FrameRenderAndPresent()
+void pkGraphics_RenderAndPresentFrame()
 {
     vkWaitForFences(s_device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 

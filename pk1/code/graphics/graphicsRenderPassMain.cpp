@@ -100,12 +100,6 @@ namespace std {
     };
 }
 
-struct PkGpuImage {
-    VkImage image;
-    VkImageView imageView;
-    VmaAllocation allocation;
-};
-
 class HelloTriangleApplication {
 public:
     std::vector<VkFramebuffer> swapChainFramebuffers;

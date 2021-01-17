@@ -28,7 +28,7 @@ void pkGraphics_GetFormatProperties(VkFormat imageFormat, VkFormatProperties* fo
 VkSampleCountFlagBits pkGraphics_GetMaxMsaaSampleCount();
 
 void pkGraphics_WaitIdle();
-void pkGraphics_FrameRenderAndPresent();
+void pkGraphics_RenderAndPresentFrame();
 
 void pkGraphics_Initialise(
     PkGraphicsModelViewProjection& rModelViewProjection, 
