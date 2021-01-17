@@ -19,16 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="code\camera\pkCamera.cpp" />
+    <ClCompile Include="code\camera\camera.cpp" />
     <ClCompile Include="code\game.cpp" />
-    <ClCompile Include="code\graphics\graphicsImgui.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsTest.cpp" />
-    <ClCompile Include="code\graphics\pkGraphics.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsSurface.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsUtils.cpp" />
-    <ClCompile Include="code\graphics\pkGraphicsWindow.cpp" />
+    <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp" />
+    <ClCompile Include="code\graphics\graphicsAllocator.cpp" />
+    <ClCompile Include="code\graphics\graphicsRenderPassMain.cpp" />
+    <ClCompile Include="code\graphics\graphics.cpp" />
+    <ClCompile Include="code\graphics\graphicsSurface.cpp" />
+    <ClCompile Include="code\graphics\graphicsSwapChain.cpp" />
+    <ClCompile Include="code\graphics\graphicsUtils.cpp" />
+    <ClCompile Include="code\graphics\graphicsWindow.cpp" />
     <ClCompile Include="code\imgui\imgui.cpp" />
     <ClCompile Include="code\imgui\imgui_demo.cpp" />
     <ClCompile Include="code\imgui\imgui_draw.cpp" />
@@ -39,16 +39,16 @@
     <ClCompile Include="code\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="code\camera\pkCamera.h" />
+    <ClInclude Include="code\camera\camera.h" />
     <ClInclude Include="code\game.h" />
-    <ClInclude Include="code\graphics\graphicsImgui.h" />
-    <ClInclude Include="code\graphics\pkGraphicsAllocator.h" />
-    <ClInclude Include="code\graphics\pkGraphicsTest.h" />
-    <ClInclude Include="code\graphics\pkGraphics.h" />
-    <ClInclude Include="code\graphics\pkGraphicsSurface.h" />
-    <ClInclude Include="code\graphics\pkGraphicsSwapChain.h" />
-    <ClInclude Include="code\graphics\pkGraphicsUtils.h" />
-    <ClInclude Include="code\graphics\pkGraphicsWindow.h" />
+    <ClInclude Include="code\graphics\graphicsRenderPassImgui.h" />
+    <ClInclude Include="code\graphics\graphicsAllocator.h" />
+    <ClInclude Include="code\graphics\graphicsRenderPassMain.h" />
+    <ClInclude Include="code\graphics\graphics.h" />
+    <ClInclude Include="code\graphics\graphicsSurface.h" />
+    <ClInclude Include="code\graphics\graphicsSwapChain.h" />
+    <ClInclude Include="code\graphics\graphicsUtils.h" />
+    <ClInclude Include="code\graphics\graphicsWindow.h" />
     <ClInclude Include="code\imgui\imconfig.h" />
     <ClInclude Include="code\imgui\imgui.h" />
     <ClInclude Include="code\imgui\imgui_impl_glfw.h" />

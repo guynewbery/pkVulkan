@@ -1,6 +1,6 @@
-#include "pkGraphicsSurface.h"
+#include "graphicsSurface.h"
 
-#include "graphics/pkGraphicsWindow.h"
+#include "graphics/graphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

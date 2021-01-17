@@ -1,10 +1,10 @@
-#include "pkGraphicsTest.h"
+#include "graphicsRenderPassMain.h"
 
-#include "graphics/pkGraphics.h"
-#include "graphics/pkGraphicsUtils.h"
-#include "graphics/pkGraphicsSwapChain.h"
-#include "graphics/pkGraphicsWindow.h"
-#include "graphics/pkGraphicsAllocator.h"
+#include "graphics/graphics.h"
+#include "graphics/graphicsAllocator.h"
+#include "graphics/graphicsSwapChain.h"
+#include "graphics/graphicsUtils.h"
+#include "graphics/graphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -951,27 +951,27 @@ public:
 
 HelloTriangleApplication app;
 
-VkCommandBuffer& pkGraphicsTest_GetCommandBuffer(uint32_t imageIndex)
+VkCommandBuffer& pkGraphicsRenderPassMain_GetCommandBuffer(uint32_t imageIndex)
 {
     return app.commandBuffers[imageIndex];
 }
 
-void pkGraphicsTest_OnSwapChainCreate()
+void pkGraphicsRenderPassMain_OnSwapChainCreate()
 {
     app.onSwapChainCreate();
 }
 
-void pkGraphicsTest_OnSwapChainDestroy()
+void pkGraphicsRenderPassMain_OnSwapChainDestroy()
 {
     app.onSwapChainDestroy();
 }
 
-void pkGraphicsTest_Initialise()
+void pkGraphicsRenderPassMain_Initialise()
 {
     app.initVulkan();
 }
 
-void pkGraphicsTest_Cleanup()
+void pkGraphicsRenderPassMain_Cleanup()
 {
     app.cleanup();
 }

@@ -1,9 +1,9 @@
-#include "pkGraphicsSwapChain.h"
+#include "graphicsSwapChain.h"
 
-#include "graphics/pkGraphicsUtils.h"
-#include "graphics/pkGraphicsSurface.h"
-#include "graphics/pkGraphicsWindow.h"
-#include "graphics/pkGraphicsAllocator.h"
+#include "graphics/graphicsAllocator.h"
+#include "graphics/graphicsSurface.h"
+#include "graphics/graphicsUtils.h"
+#include "graphics/graphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>

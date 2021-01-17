@@ -1,10 +1,10 @@
 #include "game.h"
 
-#include "graphics/graphicsImgui.h"
-#include "graphics/pkGraphics.h"
-#include "graphics/pkGraphicsTest.h"
-#include "graphics/pkGraphicsWindow.h"
-#include "camera/pkCamera.h"
+#include "graphics/graphics.h"
+#include "graphics/graphicsRenderPassImgui.h"
+#include "graphics/graphicsRenderPassMain.h"
+#include "graphics/graphicsWindow.h"
+#include "camera/camera.h"
 
 #include <GLFW/glfw3.h>
 
@@ -23,20 +23,20 @@ static std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 
 static void onSwapChainCreate()
 {
-	pkGraphicsTest_OnSwapChainCreate();
+	pkGraphicsRenderPassMain_OnSwapChainCreate();
 	graphicsImgui_OnSwapChainCreate();
 }
 
 static void onSwapChainDestroy()
 {
 	graphicsImgui_OnSwapChainDestroy();
-	pkGraphicsTest_OnSwapChainDestroy();
+	pkGraphicsRenderPassMain_OnSwapChainDestroy();
 }
 
 static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
 	buffers.resize(2);
-	buffers[0] = pkGraphicsTest_GetCommandBuffer(imageIndex);
+	buffers[0] = pkGraphicsRenderPassMain_GetCommandBuffer(imageIndex);
 	buffers[1] = graphicsImgui_GetCommandBuffer(imageIndex);
 }
 
@@ -67,7 +67,7 @@ static void gameInitialise()
 
 	pkGraphics_Initialise(s_graphicsModelViewProjection, onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
 
-	pkGraphicsTest_Initialise();
+	pkGraphicsRenderPassMain_Initialise();
 	graphicsImgui_Initialise();
 }
 
@@ -76,7 +76,7 @@ static void gameCleanup()
 	pkGraphics_WaitIdle();
 
 	graphicsImgui_Cleanup();
-	pkGraphicsTest_Cleanup();
+	pkGraphicsRenderPassMain_Cleanup();
 
 	pkGraphics_Cleanup();
 

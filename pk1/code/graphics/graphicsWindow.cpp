@@ -1,4 +1,4 @@
-#include "pkGraphicsSurface.h"
+#include "graphicsSurface.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -43,4 +43,3 @@ void pkGraphicsWindow_ResetResized()
 {
 	s_windowResized = false;
 }
-

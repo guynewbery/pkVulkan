@@ -21,33 +21,6 @@
     <ClCompile Include="code\game.cpp">
       <Filter>code</Filter>
     </ClCompile>
-    <ClCompile Include="code\camera\pkCamera.cpp">
-      <Filter>code\camera</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsSurface.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsUtils.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsTest.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsWindow.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphics.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\graphicsImgui.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="code\imgui\imgui.cpp">
       <Filter>code\imgui</Filter>
     </ClCompile>
@@ -69,6 +42,33 @@
     <ClCompile Include="code\imgui\imgui_widgets.cpp">
       <Filter>code\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphics.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsAllocator.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsSurface.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsSwapChain.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsRenderPassMain.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsUtils.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsWindow.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\camera\camera.cpp">
+      <Filter>code\camera</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
@@ -76,33 +76,6 @@
     </ClInclude>
     <ClInclude Include="code\game.h">
       <Filter>code</Filter>
-    </ClInclude>
-    <ClInclude Include="code\camera\pkCamera.h">
-      <Filter>code\camera</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsSwapChain.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsSurface.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsUtils.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsTest.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsWindow.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphics.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\pkGraphicsAllocator.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\graphicsImgui.h">
-      <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\imgui\imconfig.h">
       <Filter>code\imgui</Filter>
@@ -127,6 +100,33 @@
     </ClInclude>
     <ClInclude Include="code\imgui\imstb_truetype.h">
       <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsRenderPassImgui.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphics.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsAllocator.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsSurface.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsSwapChain.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsRenderPassMain.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsUtils.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsWindow.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\camera\camera.h">
+      <Filter>code\camera</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

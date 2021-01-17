@@ -1,6 +1,6 @@
-#include "pkCamera.h"
+#include "camera.h"
 
-#include "graphics/pkGraphics.h"
+#include "graphics/graphics.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
