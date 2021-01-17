@@ -24,18 +24,20 @@ static std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 static void onSwapChainCreate()
 {
 	pkGraphicsTest_OnSwapChainCreate();
+	graphicsImgui_OnSwapChainCreate();
 }
 
 static void onSwapChainDestroy()
 {
+	graphicsImgui_OnSwapChainDestroy();
 	pkGraphicsTest_OnSwapChainDestroy();
 }
 
 static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
-	buffers.resize(1);
+	buffers.resize(2);
 	buffers[0] = pkGraphicsTest_GetCommandBuffer(imageIndex);
-	//buffers[1] = graphicsImgui_GetCommandBuffer(imageIndex);
+	buffers[1] = graphicsImgui_GetCommandBuffer(imageIndex);
 }
 
 static void gameUpdate()

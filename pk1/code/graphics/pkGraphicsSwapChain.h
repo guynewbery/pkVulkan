@@ -36,10 +36,6 @@ struct PkGraphicsSwapChain
 	VkImage depthImage;
 	VkImageView depthImageView;
 	VmaAllocation depthImageAllocation;
-
-	VkImage imguiImage;
-	VkImageView imguiImageView;
-	VmaAllocation imguiImageAllocation;
 };
 
 PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain();
