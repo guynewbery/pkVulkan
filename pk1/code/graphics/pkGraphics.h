@@ -3,6 +3,7 @@
 #include <vulkan/vulkan_core.h>
 
 #include <glm/glm.hpp>
+#include <vector>
 
 struct PkGraphicsModelViewProjection
 {
@@ -14,6 +15,7 @@ struct PkGraphicsModelViewProjection
     float farViewPlane = 100.0f;
 };
 
+VkInstance pkGraphics_GetInstance();
 VkPhysicalDevice pkGraphics_GetPhysicalDevice();
 VkDevice pkGraphics_GetDevice();
 VkCommandPool pkGraphics_GetCommandPool();
@@ -32,6 +34,6 @@ void pkGraphics_Initialise(
     PkGraphicsModelViewProjection& rModelViewProjection, 
     void (*pOnSwapChainCreate)(), 
     void (*pOnSwapChainDestroy)(),
-    VkCommandBuffer& (*pGetCommandBuffer)(uint32_t));
+    void (*pGetCommandBuffers)(uint32_t, std::vector<VkCommandBuffer>&));
 
 void pkGraphics_Cleanup();

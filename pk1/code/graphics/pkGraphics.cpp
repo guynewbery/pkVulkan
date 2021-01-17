@@ -17,7 +17,7 @@
 
 void (*pkGraphics_OnSwapChainCreateCallback)();
 void (*pkGraphics_OnSwapChainDestroyCallback)();
-VkCommandBuffer& (*pkGraphics_GetCommandBufferCallback)(uint32_t);
+void (*pkGraphics_GetCommandBuffersCallback)(uint32_t, std::vector<VkCommandBuffer>&);
 
 static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
 
@@ -439,6 +439,11 @@ void updateUniformBuffer(uint32_t currentImage)
     vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage]);
 }
 
+VkInstance pkGraphics_GetInstance()
+{
+    return s_instance;
+}
+
 VkPhysicalDevice pkGraphics_GetPhysicalDevice()
 {
     return s_physicalDevice;
@@ -512,9 +517,11 @@ void pkGraphics_FrameRenderAndPresent()
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
-
-    submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &pkGraphics_GetCommandBufferCallback(imageIndex);
+    
+    std::vector<VkCommandBuffer> buffers;
+    pkGraphics_GetCommandBuffersCallback(imageIndex, buffers);
+    submitInfo.commandBufferCount = static_cast<uint32_t>(buffers.size());
+    submitInfo.pCommandBuffers = buffers.data();
 
     VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
     submitInfo.signalSemaphoreCount = 1;
@@ -563,11 +570,11 @@ void pkGraphics_Initialise(
     PkGraphicsModelViewProjection& rModelViewProjection, 
     void (*pOnSwapChainCreate)(), 
     void (*pOnSwapChainDestroy)(), 
-    VkCommandBuffer& (*pGetCommandBuffer)(uint32_t))
+    void (*pGetCommandBuffers)(uint32_t, std::vector<VkCommandBuffer>&))
 {
     pkGraphics_OnSwapChainCreateCallback = pOnSwapChainCreate;
     pkGraphics_OnSwapChainDestroyCallback = pOnSwapChainDestroy;
-    pkGraphics_GetCommandBufferCallback = pGetCommandBuffer;
+    pkGraphics_GetCommandBuffersCallback = pGetCommandBuffers;
 
     s_pGraphicsModelViewProjection = &rModelViewProjection;
 
@@ -620,5 +627,5 @@ void pkGraphics_Cleanup()
 
     pkGraphics_OnSwapChainCreateCallback = nullptr;
     pkGraphics_OnSwapChainDestroyCallback = nullptr;
-    pkGraphics_GetCommandBufferCallback = nullptr;
+    pkGraphics_GetCommandBuffersCallback = nullptr;
 }

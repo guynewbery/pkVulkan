@@ -1,5 +1,6 @@
 #include "game.h"
 
+#include "graphics/graphicsImgui.h"
 #include "graphics/pkGraphics.h"
 #include "graphics/pkGraphicsTest.h"
 #include "graphics/pkGraphicsWindow.h"
@@ -20,19 +21,6 @@ static PkGraphicsModelViewProjection s_graphicsModelViewProjection;
 static std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
 static std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 
-static void gameUpdate()
-{
-	lastTime = currentTime;
-	currentTime = std::chrono::high_resolution_clock::now();
-	float dt = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
-
-	glfwPollEvents();
-
-	pkCamera_Update(s_graphicsModelViewProjection, dt);
-
-	pkGraphics_FrameRenderAndPresent();
-}
-
 static void onSwapChainCreate()
 {
 	pkGraphicsTest_OnSwapChainCreate();
@@ -43,9 +31,26 @@ static void onSwapChainDestroy()
 	pkGraphicsTest_OnSwapChainDestroy();
 }
 
-static VkCommandBuffer& getCommandBuffer(uint32_t imageIndex)
+static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
-	return pkGraphicsTest_GetCommandBuffer(imageIndex);
+	buffers.resize(1);
+	buffers[0] = pkGraphicsTest_GetCommandBuffer(imageIndex);
+	//buffers[1] = graphicsImgui_GetCommandBuffer(imageIndex);
+}
+
+static void gameUpdate()
+{
+	lastTime = currentTime;
+	currentTime = std::chrono::high_resolution_clock::now();
+	float dt = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - lastTime).count();
+
+	glfwPollEvents();
+
+	pkCamera_Update(s_graphicsModelViewProjection, dt);
+
+	graphicsImgui_Update();
+
+	pkGraphics_FrameRenderAndPresent();
 }
 
 static void gameInitialise()
@@ -58,15 +63,17 @@ static void gameInitialise()
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
 	pkGraphicsWindow_Create(windowName);
 
-	pkGraphics_Initialise(s_graphicsModelViewProjection, onSwapChainCreate, onSwapChainDestroy, getCommandBuffer);
+	pkGraphics_Initialise(s_graphicsModelViewProjection, onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
 
 	pkGraphicsTest_Initialise();
+	graphicsImgui_Initialise();
 }
 
 static void gameCleanup()
 {
 	pkGraphics_WaitIdle();
 
+	graphicsImgui_Cleanup();
 	pkGraphicsTest_Cleanup();
 
 	pkGraphics_Cleanup();

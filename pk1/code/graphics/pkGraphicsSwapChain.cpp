@@ -155,14 +155,22 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
         throw std::runtime_error("failed to create descriptor pool!");
     }
 
-    pkGraphicsUtils_CreateImage(device, s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, maxMsaaSampleCount, s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.colorImage, s_swapChain.colorImageView, s_swapChain.colorImageAllocation);
+    uint32_t w = s_swapChain.swapChainExtent.width;
+    uint32_t h = s_swapChain.swapChainExtent.height;
+
+    pkGraphicsUtils_CreateImage(device, w, h, 1, maxMsaaSampleCount, s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.colorImage, s_swapChain.colorImageView, s_swapChain.colorImageAllocation);
  
     VkFormat depthFormat = pkGraphicsUtils_FindDepthFormat(physicalDevice);
-    pkGraphicsUtils_CreateImage(device, s_swapChain.swapChainExtent.width, s_swapChain.swapChainExtent.height, 1, maxMsaaSampleCount, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.depthImage, s_swapChain.depthImageView, s_swapChain.depthImageAllocation);
+    pkGraphicsUtils_CreateImage(device, w, h, 1, maxMsaaSampleCount, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.depthImage, s_swapChain.depthImageView, s_swapChain.depthImageAllocation);
+
+    pkGraphicsUtils_CreateImage(device, w, h, 1, VK_SAMPLE_COUNT_1_BIT, s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.imguiImage, s_swapChain.imguiImageView, s_swapChain.imguiImageAllocation);
 }
 
 void pkGraphicsSwapChain_Destroy(VkDevice device)
 {
+    vkDestroyImageView(device, s_swapChain.imguiImageView, nullptr);
+    vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.imguiImage, s_swapChain.imguiImageAllocation);
+
     vkDestroyImageView(device, s_swapChain.depthImageView, nullptr);
     vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.depthImage, s_swapChain.depthImageAllocation);
 

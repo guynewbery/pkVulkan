@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="code\camera\pkCamera.cpp" />
     <ClCompile Include="code\game.cpp" />
+    <ClCompile Include="code\graphics\graphicsImgui.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsTest.cpp" />
     <ClCompile Include="code\graphics\pkGraphics.cpp" />
@@ -28,11 +29,19 @@
     <ClCompile Include="code\graphics\pkGraphicsSwapChain.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsUtils.cpp" />
     <ClCompile Include="code\graphics\pkGraphicsWindow.cpp" />
+    <ClCompile Include="code\imgui\imgui.cpp" />
+    <ClCompile Include="code\imgui\imgui_demo.cpp" />
+    <ClCompile Include="code\imgui\imgui_draw.cpp" />
+    <ClCompile Include="code\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="code\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="code\imgui\imgui_tables.cpp" />
+    <ClCompile Include="code\imgui\imgui_widgets.cpp" />
     <ClCompile Include="code\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\camera\pkCamera.h" />
     <ClInclude Include="code\game.h" />
+    <ClInclude Include="code\graphics\graphicsImgui.h" />
     <ClInclude Include="code\graphics\pkGraphicsAllocator.h" />
     <ClInclude Include="code\graphics\pkGraphicsTest.h" />
     <ClInclude Include="code\graphics\pkGraphics.h" />
@@ -40,6 +49,14 @@
     <ClInclude Include="code\graphics\pkGraphicsSwapChain.h" />
     <ClInclude Include="code\graphics\pkGraphicsUtils.h" />
     <ClInclude Include="code\graphics\pkGraphicsWindow.h" />
+    <ClInclude Include="code\imgui\imconfig.h" />
+    <ClInclude Include="code\imgui\imgui.h" />
+    <ClInclude Include="code\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="code\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="code\imgui\imgui_internal.h" />
+    <ClInclude Include="code\imgui\imstb_rectpack.h" />
+    <ClInclude Include="code\imgui\imstb_textedit.h" />
+    <ClInclude Include="code\imgui\imstb_truetype.h" />
     <ClInclude Include="code\library_macros.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -112,7 +129,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -130,7 +147,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -148,7 +165,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -166,7 +183,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\imgui-master;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.0\Include;C:\dev\Libraries\glfw-3.3.2.bin.WIN64\include;C:\dev\Libraries\glm;C:\dev\Libraries\stb-master;C:\dev\Libraries\tinyobjloader-master;C:\dev\Libraries\VulkanMemoryAllocator-master\src;C:\dev\pk1\pk1\code;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>

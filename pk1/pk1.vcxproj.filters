@@ -10,6 +10,9 @@
     <Filter Include="code\graphics">
       <UniqueIdentifier>{4238882a-35e1-4061-9f70-ac24fe497aff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="code\imgui">
+      <UniqueIdentifier>{37e06d06-381e-496a-9c81-3865d816f410}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="code\main.cpp">
@@ -42,6 +45,30 @@
     <ClCompile Include="code\graphics\pkGraphicsAllocator.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="code\graphics\graphicsImgui.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_demo.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_draw.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_impl_glfw.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_impl_vulkan.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_tables.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="code\imgui\imgui_widgets.cpp">
+      <Filter>code\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
@@ -73,6 +100,33 @@
     </ClInclude>
     <ClInclude Include="code\graphics\pkGraphicsAllocator.h">
       <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsImgui.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imconfig.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imgui.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imgui_impl_glfw.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imgui_impl_vulkan.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imgui_internal.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imstb_rectpack.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imstb_textedit.h">
+      <Filter>code\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="code\imgui\imstb_truetype.h">
+      <Filter>code\imgui</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
