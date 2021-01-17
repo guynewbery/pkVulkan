@@ -102,6 +102,8 @@ namespace std {
 
 class HelloTriangleApplication {
 public:
+    VkDescriptorPool descriptorPool;
+
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass renderPass;
@@ -160,6 +162,7 @@ public:
 
     void onSwapChainCreate()
     {
+        createDescriptorPool();
         createDescriptorSets();
         createRenderPass();
         createGraphicsPipeline();
@@ -179,6 +182,28 @@ public:
         vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
         vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
+
+        vkDestroyDescriptorPool(pkGraphics_GetDevice(), descriptorPool, nullptr);
+    }
+
+    void createDescriptorPool()
+    {
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+
+        VkDescriptorPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
+        poolInfo.maxSets = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+
+        if (vkCreateDescriptorPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create descriptor pool!");
+        }
     }
 
     void createRenderPass() 
@@ -789,7 +814,7 @@ public:
         std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = pkGraphicsSwapChain_GetSwapChain().descriptorPool;
+        allocInfo.descriptorPool = descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 

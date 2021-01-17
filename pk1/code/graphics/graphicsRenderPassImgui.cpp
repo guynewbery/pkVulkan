@@ -330,9 +330,9 @@ void graphicsImgui_Initialise()
 
     // Upload Fonts
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), s_commandPools[0]);
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), s_commandPools[0], commandBuffer);
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }

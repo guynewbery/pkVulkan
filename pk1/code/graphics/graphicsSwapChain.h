@@ -27,8 +27,6 @@ struct PkGraphicsSwapChain
 	std::vector<VkBuffer> uniformBuffers;
 	std::vector<VmaAllocation> uniformBufferAllocations;
 
-	VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
-
 	VkImage colorImage;
 	VkImageView colorImageView;
 	VmaAllocation colorImageAllocation;

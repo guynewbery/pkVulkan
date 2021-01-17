@@ -138,23 +138,6 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
         PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &s_swapChain.uniformBuffers[i], &s_swapChain.uniformBufferAllocations[i]);
     }
 
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
-    poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-
-    VkDescriptorPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-    poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(s_swapChain.swapChainImages.size());
-
-    if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &s_swapChain.descriptorPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor pool!");
-    }
-
     uint32_t w = s_swapChain.swapChainExtent.width;
     uint32_t h = s_swapChain.swapChainExtent.height;
 
@@ -171,8 +154,6 @@ void pkGraphicsSwapChain_Destroy(VkDevice device)
 
     vkDestroyImageView(device, s_swapChain.colorImageView, nullptr);
     vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.colorImage, s_swapChain.colorImageAllocation);
-
-    vkDestroyDescriptorPool(device, s_swapChain.descriptorPool, nullptr);
 
     for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
     {
