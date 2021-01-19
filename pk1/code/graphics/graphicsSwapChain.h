@@ -2,16 +2,8 @@
 
 #include <vulkan/vulkan_core.h>
 #include <vk_mem_alloc.h>
-#include <glm/glm.hpp>
 
 #include <vector>
-
-struct UniformBufferObject
-{
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-};
 
 struct PkGraphicsSwapChain
 {
@@ -23,9 +15,6 @@ struct PkGraphicsSwapChain
 
 	VkSurfaceFormatKHR surfaceFormat;
 	VkPresentModeKHR presentMode;
-
-	std::vector<VkBuffer> uniformBuffers;
-	std::vector<VmaAllocation> uniformBufferAllocations;
 
 	VkImage colorImage;
 	VkImageView colorImageView;

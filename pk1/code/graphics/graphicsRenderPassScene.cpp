@@ -28,20 +28,32 @@
 #include <array>
 #include <unordered_map>
 
+static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
+
 const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
 
-struct InstanceData {
+struct UniformBufferObject
+{
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
+};
+
+struct InstanceData 
+{
     glm::vec3 pos;
     float rot;
 };
 
-struct Vertex {
+struct Vertex 
+{
     glm::vec3 pos;
     glm::vec3 color;
     glm::vec2 texCoord;
 
-    bool operator==(const Vertex& other) const {
+    bool operator==(const Vertex& other) const 
+    {
         return pos == other.pos && color == other.color && texCoord == other.texCoord;
     }
 };
@@ -132,6 +144,7 @@ public:
 
     void OnSwapChainCreate()
     {
+        createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
         createRenderPass();
@@ -154,10 +167,13 @@ public:
         vkDestroyRenderPass(pkGraphics_GetDevice(), m_renderPass, nullptr);
 
         vkDestroyDescriptorPool(pkGraphics_GetDevice(), m_descriptorPool, nullptr);
+
+        destroyUniformBuffers();
     }
 
     VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex)
     {
+        updateUniformBuffer(imageIndex);
         return m_commandBuffers[imageIndex];
     }
 
@@ -189,9 +205,43 @@ private:
     VkBuffer m_indexBuffer;
     VmaAllocation m_indexBufferAllocation;
 
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VmaAllocation> uniformBufferAllocations;
+
     std::vector<VkDescriptorSet> m_descriptorSets;
 
     std::vector<VkCommandBuffer> m_commandBuffers;
+
+    void createUniformBuffers()
+    {
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+        size_t bufferCount = pkGraphicsSwapChain_GetSwapChain().swapChainImages.size();
+
+        uniformBuffers.resize(bufferCount);
+        uniformBufferAllocations.resize(bufferCount);
+
+        for (size_t i = 0; i < bufferCount; i++)
+        {
+            createBuffer
+            (
+                bufferSize, 
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+                &uniformBuffers[i], 
+                &uniformBufferAllocations[i]
+            );
+        }
+    }
+
+    void destroyUniformBuffers()
+    {
+        size_t bufferCount = pkGraphicsSwapChain_GetSwapChain().swapChainImages.size();
+
+        for (size_t i = 0; i < bufferCount; i++)
+        {
+            vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), uniformBuffers[i], uniformBufferAllocations[i]);
+        }
+    }
 
     void createDescriptorPool()
     {
@@ -461,7 +511,14 @@ private:
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
+        createBuffer
+        (
+            imageSize, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            &stagingBuffer, 
+            &stagingBufferAllocation
+        );
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
@@ -762,14 +819,28 @@ private:
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
+        createBuffer
+        (
+            bufferSize, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            &stagingBuffer, 
+            &stagingBufferAllocation
+        );
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, m_instances.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_instanceBuffer, &m_instanceBufferAllocation);
+        createBuffer
+        (
+            bufferSize, 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            &m_instanceBuffer, 
+            &m_instanceBufferAllocation
+        );
 
         copyBuffer(stagingBuffer, m_instanceBuffer, bufferSize);
 
@@ -782,14 +853,28 @@ private:
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
+        createBuffer
+        (
+            bufferSize, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            &stagingBuffer, 
+            &stagingBufferAllocation
+        );
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, m_vertices.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_vertexBuffer, &m_vertexBufferAllocation);
+        createBuffer
+        (
+            bufferSize, 
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            &m_vertexBuffer, 
+            &m_vertexBufferAllocation
+        );
 
         copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
 
@@ -802,14 +887,28 @@ private:
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &stagingBuffer, &stagingBufferAllocation);
+        createBuffer
+        (
+            bufferSize, 
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
+            &stagingBuffer, 
+            &stagingBufferAllocation
+        );
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
         memcpy(data, m_indices.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_indexBuffer, &m_indexBufferAllocation);
+        createBuffer
+        (
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, 
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, 
+            &m_indexBuffer, 
+            &m_indexBufferAllocation
+        );
 
         copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
 
@@ -834,7 +933,7 @@ private:
         for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(); i++)
         {
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = pkGraphicsSwapChain_GetSwapChain().uniformBuffers[i];
+            bufferInfo.buffer = uniformBuffers[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -862,6 +961,24 @@ private:
             descriptorWrites[1].pImageInfo = &imageInfo;
 
             vkUpdateDescriptorSets(pkGraphics_GetDevice(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+        }
+    }
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* pBuffer, VmaAllocation* pBufferAllocation)
+    {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VmaAllocationCreateInfo allocInfo = {};
+        allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+        allocInfo.requiredFlags = properties;
+
+        if (vmaCreateBuffer(pkGraphicsAllocator_GetAllocator(), &bufferInfo, &allocInfo, pBuffer, pBufferAllocation, nullptr) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create buffer!");
         }
     }
 
@@ -973,6 +1090,25 @@ private:
 
         return buffer;
     }
+
+    void updateUniformBuffer(uint32_t currentImage)
+    {
+        float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
+        float aspectRatio = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width / (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
+        float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
+        float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
+
+        UniformBufferObject ubo{};
+        ubo.model = s_pGraphicsModelViewProjection->model;
+        ubo.view = s_pGraphicsModelViewProjection->view;
+        ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
+        ubo.proj[1][1] *= -1;
+
+        void* data;
+        vmaMapMemory(pkGraphicsAllocator_GetAllocator(), uniformBufferAllocations[currentImage], &data);
+        memcpy(data, &ubo, sizeof(ubo));
+        vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), uniformBufferAllocations[currentImage]);
+    }
 };
 
 static PkGrapicsRenderPassScene* s_pGraphicsRenderPassScene = nullptr;
@@ -992,12 +1128,14 @@ void pkGraphicsRenderPassScene_OnSwapChainDestroy()
     s_pGraphicsRenderPassScene->OnSwapChainDestroy();
 }
 
-void pkGraphicsRenderPassScene_Initialise()
+void pkGraphicsRenderPassScene_Initialise(PkGraphicsModelViewProjection& rModelViewProjection)
 {
+    s_pGraphicsModelViewProjection = &rModelViewProjection;
     s_pGraphicsRenderPassScene = new PkGrapicsRenderPassScene();
 }
 
 void pkGraphicsRenderPassScene_Cleanup()
 {
     delete(s_pGraphicsRenderPassScene);
+    s_pGraphicsModelViewProjection = nullptr;
 }

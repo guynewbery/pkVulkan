@@ -1,6 +1,6 @@
 #include "camera.h"
 
-#include "graphics/graphics.h"
+#include "graphics/graphicsRenderPassScene.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

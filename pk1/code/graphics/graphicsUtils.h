@@ -6,8 +6,6 @@
 #include <vector>
 #include <optional>
 
-void PkGraphicsUtils_CreateBuffer(VmaAllocator allocator, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* pBuffer, VmaAllocation* pBufferAllocation);
-
 struct PkGraphicsSwapChainSupport
 {
     VkSurfaceCapabilitiesKHR capabilities;

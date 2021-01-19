@@ -4,24 +4,6 @@
 
 #include <iostream>
 
-void PkGraphicsUtils_CreateBuffer(VmaAllocator allocator, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* pBuffer, VmaAllocation* pBufferAllocation)
-{
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
-    bufferInfo.usage = usage;
-    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    VmaAllocationCreateInfo allocInfo = {};
-    allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-    allocInfo.requiredFlags = properties;
-
-    if (vmaCreateBuffer(allocator, &bufferInfo, &allocInfo, pBuffer, pBufferAllocation, nullptr) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create buffer!");
-    }
-}
-
 PkGraphicsSwapChainSupport pkGraphicsUtils_QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
     PkGraphicsSwapChainSupport details;

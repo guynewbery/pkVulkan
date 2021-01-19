@@ -19,8 +19,6 @@ void (*pkGraphics_OnSwapChainCreateCallback)();
 void (*pkGraphics_OnSwapChainDestroyCallback)();
 void (*pkGraphics_GetCommandBuffersCallback)(uint32_t, std::vector<VkCommandBuffer>&);
 
-static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
-
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 VkDebugUtilsMessengerEXT s_debugMessenger = VK_NULL_HANDLE;
@@ -420,25 +418,6 @@ void recreateSwapChain()
     }
 }
 
-void updateUniformBuffer(uint32_t currentImage)
-{
-    float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
-    float aspectRatio = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width / (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
-    float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
-    float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
-
-    UniformBufferObject ubo{};
-    ubo.model = s_pGraphicsModelViewProjection->model;
-    ubo.view = s_pGraphicsModelViewProjection->view;
-    ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
-    ubo.proj[1][1] *= -1;
-
-    void* data;
-    vmaMapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage], &data);
-    memcpy(data, &ubo, sizeof(ubo));
-    vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), pkGraphicsSwapChain_GetSwapChain().uniformBufferAllocations[currentImage]);
-}
-
 VkInstance pkGraphics_GetInstance()
 {
     return s_instance;
@@ -501,8 +480,6 @@ void pkGraphics_RenderAndPresentFrame()
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
-    updateUniformBuffer(imageIndex);
-
     if (imagesInFlight[imageIndex] != VK_NULL_HANDLE)
     {
         vkWaitForFences(s_device, 1, &imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
@@ -517,7 +494,7 @@ void pkGraphics_RenderAndPresentFrame()
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
-    
+
     std::vector<VkCommandBuffer> buffers;
     pkGraphics_GetCommandBuffersCallback(imageIndex, buffers);
     submitInfo.commandBufferCount = static_cast<uint32_t>(buffers.size());
@@ -567,7 +544,6 @@ void pkGraphics_WaitIdle()
 }
 
 void pkGraphics_Initialise(
-    PkGraphicsModelViewProjection& rModelViewProjection, 
     void (*pOnSwapChainCreate)(), 
     void (*pOnSwapChainDestroy)(), 
     void (*pGetCommandBuffers)(uint32_t, std::vector<VkCommandBuffer>&))
@@ -575,8 +551,6 @@ void pkGraphics_Initialise(
     pkGraphics_OnSwapChainCreateCallback = pOnSwapChainCreate;
     pkGraphics_OnSwapChainDestroyCallback = pOnSwapChainDestroy;
     pkGraphics_GetCommandBuffersCallback = pGetCommandBuffers;
-
-    s_pGraphicsModelViewProjection = &rModelViewProjection;
 
     createInstance();
     setupDebugMessenger();
@@ -622,8 +596,6 @@ void pkGraphics_Cleanup()
     }
 
     vkDestroyInstance(s_instance, nullptr);
-
-    s_pGraphicsModelViewProjection = nullptr;
 
     pkGraphics_OnSwapChainCreateCallback = nullptr;
     pkGraphics_OnSwapChainDestroyCallback = nullptr;

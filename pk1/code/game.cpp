@@ -65,9 +65,9 @@ static void gameInitialise()
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
 	pkGraphicsWindow_Create(windowName);
 
-	pkGraphics_Initialise(s_graphicsModelViewProjection, onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
+	pkGraphics_Initialise(onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
 
-	pkGraphicsRenderPassScene_Initialise();
+	pkGraphicsRenderPassScene_Initialise(s_graphicsModelViewProjection);
 	pkGraphicsRenderPassImgui_Initialise();
 }
 

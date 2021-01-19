@@ -130,14 +130,6 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
         s_swapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, s_swapChain.swapChainImages[i], s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-    s_swapChain.uniformBuffers.resize(s_swapChain.swapChainImages.size());
-    s_swapChain.uniformBufferAllocations.resize(s_swapChain.swapChainImages.size());
-    for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
-    {
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &s_swapChain.uniformBuffers[i], &s_swapChain.uniformBufferAllocations[i]);
-    }
-
     uint32_t w = s_swapChain.swapChainExtent.width;
     uint32_t h = s_swapChain.swapChainExtent.height;
 
@@ -154,11 +146,6 @@ void pkGraphicsSwapChain_Destroy(VkDevice device)
 
     vkDestroyImageView(device, s_swapChain.colorImageView, nullptr);
     vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.colorImage, s_swapChain.colorImageAllocation);
-
-    for (size_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
-    {
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), s_swapChain.uniformBuffers[i], s_swapChain.uniformBufferAllocations[i]);
-    }
 
     for (VkImageView imageView : s_swapChain.swapChainImageViews)
     {
