@@ -2,7 +2,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include <glm/glm.hpp>
 #include <vector>
 
 VkInstance pkGraphics_GetInstance();
