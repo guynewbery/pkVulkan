@@ -2,6 +2,7 @@
 
 #include "graphics/graphics.h"
 #include "graphics/graphicsAllocator.h"
+#include "graphics/graphicsSurface.h"
 #include "graphics/graphicsSwapChain.h"
 #include "graphics/graphicsUtils.h"
 #include "graphics/graphicsWindow.h"
@@ -117,6 +118,9 @@ class PkGrapicsRenderPassScene
 public:
     PkGrapicsRenderPassScene()
     {
+        createCommandPool();
+        createDescriptorSetLayout();
+
         createTextureImage();
         createTextureSampler();
         populateInstanceData();
@@ -140,6 +144,9 @@ public:
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_indexBuffer, m_indexBufferAllocation);
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_vertexBuffer, m_vertexBufferAllocation);
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_instanceBuffer, m_instanceBufferAllocation);
+
+        vkDestroyDescriptorSetLayout(pkGraphics_GetDevice(), m_descriptorSetLayout, nullptr);
+        vkDestroyCommandPool(pkGraphics_GetDevice(), m_commandPool, nullptr);
     }
 
     void OnSwapChainCreate()
@@ -162,7 +169,7 @@ public:
             vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
         }
 
-        vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
+        vkFreeCommandBuffers(pkGraphics_GetDevice(), m_commandPool, static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
 
         vkDestroyPipeline(pkGraphics_GetDevice(), m_graphicsPipeline, nullptr);
         vkDestroyPipelineLayout(pkGraphics_GetDevice(), m_pipelineLayout, nullptr);
@@ -182,6 +189,9 @@ public:
     }
 
 private:
+    VkCommandPool m_commandPool;
+    VkDescriptorSetLayout m_descriptorSetLayout;
+
     VkDescriptorPool m_descriptorPool;
 
     std::vector<VkFramebuffer> m_swapChainFramebuffers;
@@ -223,6 +233,48 @@ private:
     std::vector<VkDescriptorSet> m_descriptorSets;
 
     std::vector<VkCommandBuffer> m_commandBuffers;
+
+    void createCommandPool()
+    {
+        PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(pkGraphics_GetPhysicalDevice(), pkGraphicsSurface_GetSurface());
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create graphics command pool!");
+        }
+    }
+
+    void createDescriptorSetLayout()
+    {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        if (vkCreateDescriptorSetLayout(pkGraphics_GetDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
 
     void createUniformBuffers()
     {
@@ -498,7 +550,7 @@ private:
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = pkGraphics_GetDescriptorSetLayout();
+        pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
 
         if (vkCreatePipelineLayout(pkGraphics_GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
         {
@@ -655,7 +707,7 @@ private:
             throw std::runtime_error("texture image format does not support linear blitting!");
         }
 
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), m_commandPool);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -731,7 +783,7 @@ private:
             0, nullptr,
             1, &barrier);
 
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), m_commandPool, commandBuffer);
     }
 
     void createTextureSampler() 
@@ -794,7 +846,7 @@ private:
 
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) 
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), m_commandPool);
 
         VkImageMemoryBarrier barrier{};
         barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -842,12 +894,12 @@ private:
             1, &barrier
         );
 
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), m_commandPool, commandBuffer);
     }
 
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) 
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), m_commandPool);
 
         VkBufferImageCopy region{};
         region.bufferOffset = 0;
@@ -866,7 +918,7 @@ private:
 
         vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), m_commandPool, commandBuffer);
     }
 
     void populateInstanceData()
@@ -1052,7 +1104,7 @@ private:
 
     void createDescriptorSets() 
     {
-        std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
+        std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), m_descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = m_descriptorPool;
@@ -1119,13 +1171,13 @@ private:
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetCommandPool());
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), m_commandPool);
 
         VkBufferCopy copyRegion{};
         copyRegion.size = size;
         vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), pkGraphics_GetCommandPool(), commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), m_commandPool, commandBuffer);
     }
 
     void createCommandBuffers() 
@@ -1134,7 +1186,7 @@ private:
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = pkGraphics_GetCommandPool();
+        allocInfo.commandPool = m_commandPool;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
 

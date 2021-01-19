@@ -26,8 +26,6 @@ VkDebugUtilsMessengerEXT s_debugMessenger = VK_NULL_HANDLE;
 VkInstance s_instance = VK_NULL_HANDLE;
 VkPhysicalDevice s_physicalDevice = VK_NULL_HANDLE;
 VkDevice s_device = VK_NULL_HANDLE;
-VkCommandPool s_commandPool = VK_NULL_HANDLE;
-VkDescriptorSetLayout s_descriptorSetLayout = VK_NULL_HANDLE;
 
 VkQueue s_graphicsQueue = VK_NULL_HANDLE;
 VkQueue s_presentQueue = VK_NULL_HANDLE;
@@ -328,48 +326,6 @@ void createLogicalDevice()
     vkGetDeviceQueue(s_device, indices.presentFamily.value(), 0, &s_presentQueue);
 }
 
-void createCommandPool()
-{
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_physicalDevice, pkGraphicsSurface_GetSurface());
-
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-    if (vkCreateCommandPool(s_device, &poolInfo, nullptr, &s_commandPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create graphics command pool!");
-    }
-}
-
-void createDescriptorSetLayout()
-{
-    VkDescriptorSetLayoutBinding uboLayoutBinding{};
-    uboLayoutBinding.binding = 0;
-    uboLayoutBinding.descriptorCount = 1;
-    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    uboLayoutBinding.pImmutableSamplers = nullptr;
-    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-    samplerLayoutBinding.binding = 1;
-    samplerLayoutBinding.descriptorCount = 1;
-    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerLayoutBinding.pImmutableSamplers = nullptr;
-    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-    std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-    VkDescriptorSetLayoutCreateInfo layoutInfo{};
-    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-    layoutInfo.pBindings = bindings.data();
-
-    if (vkCreateDescriptorSetLayout(s_device, &layoutInfo, nullptr, &s_descriptorSetLayout) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create descriptor set layout!");
-    }
-}
-
 void createSyncObjects()
 {
     imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -431,16 +387,6 @@ VkPhysicalDevice pkGraphics_GetPhysicalDevice()
 VkDevice pkGraphics_GetDevice()
 {
     return s_device;
-}
-
-VkCommandPool pkGraphics_GetCommandPool()
-{
-    return s_commandPool;
-}
-
-VkDescriptorSetLayout* pkGraphics_GetDescriptorSetLayout()
-{
-    return &s_descriptorSetLayout;
 }
 
 VkQueue pkGraphics_GetGraphicsQueue()
@@ -562,9 +508,6 @@ void pkGraphics_Initialise(
 
     pkGraphicsAllocator_Create(s_instance, s_physicalDevice, s_device);
 
-    createCommandPool();
-    createDescriptorSetLayout();
-
     pkGraphicsSwapChain_Create(s_instance, s_physicalDevice, s_device, s_msaaSamples);
 
     createSyncObjects();
@@ -580,9 +523,6 @@ void pkGraphics_Cleanup()
     }
 
     pkGraphicsSwapChain_Destroy(s_device);
-
-    vkDestroyDescriptorSetLayout(s_device, s_descriptorSetLayout, nullptr);
-    vkDestroyCommandPool(s_device, s_commandPool, nullptr);
 
     pkGraphicsAllocator_Destroy();
 
