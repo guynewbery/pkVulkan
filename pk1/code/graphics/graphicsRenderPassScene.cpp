@@ -1,4 +1,4 @@
-#include "graphicsRenderPassMain.h"
+#include "graphicsRenderPassScene.h"
 
 #include "graphics/graphics.h"
 #include "graphics/graphicsAllocator.h"
@@ -100,40 +100,10 @@ namespace std {
     };
 }
 
-class HelloTriangleApplication {
+class PkGrapicsRenderPassScene 
+{
 public:
-    VkDescriptorPool descriptorPool;
-
-    std::vector<VkFramebuffer> swapChainFramebuffers;
-
-    VkRenderPass renderPass;
-    VkPipelineLayout pipelineLayout;
-    VkPipeline graphicsPipeline;
-
-    VkImage textureImage;
-    VkImageView textureImageView;
-    VmaAllocation textureImageAllocation;
-
-    uint32_t mipLevels;
-    VkSampler textureSampler;
-
-    std::vector<InstanceData> instances;
-    VkBuffer instanceBuffer;
-    VmaAllocation instanceBufferAllocation;
-
-    std::vector<Vertex> vertices;
-    VkBuffer vertexBuffer;
-    VmaAllocation vertexBufferAllocation;
-
-    std::vector<uint32_t> indices;
-    VkBuffer indexBuffer;
-    VmaAllocation indexBufferAllocation;
-
-    std::vector<VkDescriptorSet> descriptorSets;
-
-    std::vector<VkCommandBuffer> commandBuffers;
-
-    void initVulkan() 
+    PkGrapicsRenderPassScene()
     {
         createTextureImage();
         createTextureSampler();
@@ -143,24 +113,24 @@ public:
         createVertexBuffer();
         createIndexBuffer();
 
-        onSwapChainCreate();
+        OnSwapChainCreate();
     }
 
-    void cleanup()
+    ~PkGrapicsRenderPassScene()
     {
-        onSwapChainDestroy();
+        OnSwapChainDestroy();
 
-        vkDestroySampler(pkGraphics_GetDevice(), textureSampler, nullptr);
+        vkDestroySampler(pkGraphics_GetDevice(), m_textureSampler, nullptr);
 
-        vkDestroyImageView(pkGraphics_GetDevice(), textureImageView, nullptr);
-        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), textureImage, textureImageAllocation);
+        vkDestroyImageView(pkGraphics_GetDevice(), m_textureImageView, nullptr);
+        vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), m_textureImage, m_textureImageAllocation);
 
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), indexBuffer, indexBufferAllocation);
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), vertexBuffer, vertexBufferAllocation);
-        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), instanceBuffer, instanceBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_indexBuffer, m_indexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_vertexBuffer, m_vertexBufferAllocation);
+        vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), m_instanceBuffer, m_instanceBufferAllocation);
     }
 
-    void onSwapChainCreate()
+    void OnSwapChainCreate()
     {
         createDescriptorPool();
         createDescriptorSets();
@@ -170,21 +140,58 @@ public:
         createCommandBuffers();
     }
 
-    void onSwapChainDestroy()
+    void OnSwapChainDestroy()
     {
-        for (auto framebuffer : swapChainFramebuffers)
+        for (VkFramebuffer framebuffer : m_swapChainFramebuffers)
         {
             vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
         }
 
-        vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+        vkFreeCommandBuffers(pkGraphics_GetDevice(), pkGraphics_GetCommandPool(), static_cast<uint32_t>(m_commandBuffers.size()), m_commandBuffers.data());
 
-        vkDestroyPipeline(pkGraphics_GetDevice(), graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(pkGraphics_GetDevice(), pipelineLayout, nullptr);
-        vkDestroyRenderPass(pkGraphics_GetDevice(), renderPass, nullptr);
+        vkDestroyPipeline(pkGraphics_GetDevice(), m_graphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(pkGraphics_GetDevice(), m_pipelineLayout, nullptr);
+        vkDestroyRenderPass(pkGraphics_GetDevice(), m_renderPass, nullptr);
 
-        vkDestroyDescriptorPool(pkGraphics_GetDevice(), descriptorPool, nullptr);
+        vkDestroyDescriptorPool(pkGraphics_GetDevice(), m_descriptorPool, nullptr);
     }
+
+    VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex)
+    {
+        return m_commandBuffers[imageIndex];
+    }
+
+private:
+    VkDescriptorPool m_descriptorPool;
+
+    std::vector<VkFramebuffer> m_swapChainFramebuffers;
+
+    VkRenderPass m_renderPass;
+    VkPipelineLayout m_pipelineLayout;
+    VkPipeline m_graphicsPipeline;
+
+    VkImage m_textureImage;
+    VkImageView m_textureImageView;
+    VmaAllocation m_textureImageAllocation;
+
+    uint32_t m_mipLevels;
+    VkSampler m_textureSampler;
+
+    std::vector<InstanceData> m_instances;
+    VkBuffer m_instanceBuffer;
+    VmaAllocation m_instanceBufferAllocation;
+
+    std::vector<Vertex> m_vertices;
+    VkBuffer m_vertexBuffer;
+    VmaAllocation m_vertexBufferAllocation;
+
+    std::vector<uint32_t> m_indices;
+    VkBuffer m_indexBuffer;
+    VmaAllocation m_indexBufferAllocation;
+
+    std::vector<VkDescriptorSet> m_descriptorSets;
+
+    std::vector<VkCommandBuffer> m_commandBuffers;
 
     void createDescriptorPool()
     {
@@ -200,7 +207,7 @@ public:
         poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
 
-        if (vkCreateDescriptorPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS)
+        if (vkCreateDescriptorPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create descriptor pool!");
         }
@@ -275,7 +282,7 @@ public:
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(pkGraphics_GetDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) 
+        if (vkCreateRenderPass(pkGraphics_GetDevice(), &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create render pass!");
         }
@@ -381,7 +388,7 @@ public:
         pipelineLayoutInfo.setLayoutCount = 1;
         pipelineLayoutInfo.pSetLayouts = pkGraphics_GetDescriptorSetLayout();
 
-        if (vkCreatePipelineLayout(pkGraphics_GetDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) 
+        if (vkCreatePipelineLayout(pkGraphics_GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create pipeline layout!");
         }
@@ -397,12 +404,12 @@ public:
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.layout = pipelineLayout;
-        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.layout = m_pipelineLayout;
+        pipelineInfo.renderPass = m_renderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        if (vkCreateGraphicsPipelines(pkGraphics_GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &graphicsPipeline) != VK_SUCCESS) 
+        if (vkCreateGraphicsPipelines(pkGraphics_GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_graphicsPipeline) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create graphics pipeline!");
         }
@@ -413,7 +420,7 @@ public:
 
     void createFramebuffers() 
     {
-        swapChainFramebuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
+        m_swapChainFramebuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
 
         for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
         {
@@ -426,14 +433,14 @@ public:
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.renderPass = m_renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
             framebufferInfo.height = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
             framebufferInfo.layers = 1;
 
-            if (vkCreateFramebuffer(pkGraphics_GetDevice(), &framebufferInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS) 
+            if (vkCreateFramebuffer(pkGraphics_GetDevice(), &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to create framebuffer!");
             }
@@ -445,7 +452,7 @@ public:
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
-        mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        m_mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
         if (!pixels) 
         {
@@ -463,15 +470,15 @@ public:
 
         stbi_image_free(pixels);
 
-        pkGraphicsUtils_CreateImage(pkGraphics_GetDevice(), texWidth, texHeight, mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, textureImage, textureImageView, textureImageAllocation);
+        pkGraphicsUtils_CreateImage(pkGraphics_GetDevice(), texWidth, texHeight, m_mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_textureImage, m_textureImageView, m_textureImageAllocation);
 
-        transitionImageLayout(textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, mipLevels);
-        copyBufferToImage(stagingBuffer, textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+        transitionImageLayout(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, m_mipLevels);
+        copyBufferToImage(stagingBuffer, m_textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
         //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
 
-        generateMipmaps(textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, mipLevels);
+        generateMipmaps(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, m_mipLevels);
     }
 
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) 
@@ -584,10 +591,10 @@ public:
         samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
         samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
         samplerInfo.minLod = 0.0f;
-        samplerInfo.maxLod = static_cast<float>(mipLevels);
+        samplerInfo.maxLod = static_cast<float>(m_mipLevels);
         samplerInfo.mipLodBias = 0.0f;
 
-        if (vkCreateSampler(pkGraphics_GetDevice(), &samplerInfo, nullptr, &textureSampler) != VK_SUCCESS) 
+        if (vkCreateSampler(pkGraphics_GetDevice(), &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create texture sampler!");
         }
@@ -676,7 +683,7 @@ public:
 
         const uint32_t instanceCount = boardDimensions * boardDimensions;
 
-        instances.resize(instanceCount);
+        m_instances.resize(instanceCount);
 
         float tileSize = 1.5f;
 
@@ -690,8 +697,8 @@ public:
 
         for (uint32_t i = 0; i < instanceCount; i++)
         {
-            instances[i].pos = glm::vec3(x, y, 0.0f);
-            instances[i].rot = glm::radians(rot);
+            m_instances[i].pos = glm::vec3(x, y, 0.0f);
+            m_instances[i].rot = glm::radians(rot);
 
             rot += 90.0f;
 
@@ -740,18 +747,18 @@ public:
                 vertex.color = { 1.0f, 1.0f, 1.0f };
 
                 if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
+                    uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
+                    m_vertices.push_back(vertex);
                 }
 
-                indices.push_back(uniqueVertices[vertex]);
+                m_indices.push_back(uniqueVertices[vertex]);
             }
         }
     }
 
     void createInstanceBuffer() 
     {
-        VkDeviceSize bufferSize = sizeof(instances[0]) * instances.size();
+        VkDeviceSize bufferSize = sizeof(m_instances[0]) * m_instances.size();
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
@@ -759,19 +766,19 @@ public:
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
-        memcpy(data, instances.data(), (size_t)bufferSize);
+        memcpy(data, m_instances.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &instanceBuffer, &instanceBufferAllocation);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_instanceBuffer, &m_instanceBufferAllocation);
 
-        copyBuffer(stagingBuffer, instanceBuffer, bufferSize);
+        copyBuffer(stagingBuffer, m_instanceBuffer, bufferSize);
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     void createVertexBuffer() 
     {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
+        VkDeviceSize bufferSize = sizeof(m_vertices[0]) * m_vertices.size();
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
@@ -779,19 +786,19 @@ public:
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
-        memcpy(data, vertices.data(), (size_t)bufferSize);
+        memcpy(data, m_vertices.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &vertexBuffer, &vertexBufferAllocation);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_vertexBuffer, &m_vertexBufferAllocation);
 
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, m_vertexBuffer, bufferSize);
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
 
     void createIndexBuffer()
     {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
+        VkDeviceSize bufferSize = sizeof(m_indices[0]) * m_indices.size();
 
         VkBuffer stagingBuffer;
         VmaAllocation stagingBufferAllocation;
@@ -799,12 +806,12 @@ public:
 
         void* data;
         vmaMapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation, &data);
-        memcpy(data, indices.data(), (size_t)bufferSize);
+        memcpy(data, m_indices.data(), (size_t)bufferSize);
         vmaUnmapMemory(pkGraphicsAllocator_GetAllocator(), stagingBufferAllocation);
 
-        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &indexBuffer, &indexBufferAllocation);
+        PkGraphicsUtils_CreateBuffer(pkGraphicsAllocator_GetAllocator(), bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &m_indexBuffer, &m_indexBufferAllocation);
 
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
+        copyBuffer(stagingBuffer, m_indexBuffer, bufferSize);
 
         vmaDestroyBuffer(pkGraphicsAllocator_GetAllocator(), stagingBuffer, stagingBufferAllocation);
     }
@@ -814,12 +821,12 @@ public:
         std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), *pkGraphics_GetDescriptorSetLayout());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorPool = m_descriptorPool;
         allocInfo.descriptorSetCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
         allocInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
-        if (vkAllocateDescriptorSets(pkGraphics_GetDevice(), &allocInfo, descriptorSets.data()) != VK_SUCCESS) 
+        m_descriptorSets.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        if (vkAllocateDescriptorSets(pkGraphics_GetDevice(), &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
@@ -833,13 +840,13 @@ public:
 
             VkDescriptorImageInfo imageInfo{};
             imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            imageInfo.imageView = textureImageView;
-            imageInfo.sampler = textureSampler;
+            imageInfo.imageView = m_textureImageView;
+            imageInfo.sampler = m_textureSampler;
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
             descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[0].dstSet = descriptorSets[i];
+            descriptorWrites[0].dstSet = m_descriptorSets[i];
             descriptorWrites[0].dstBinding = 0;
             descriptorWrites[0].dstArrayElement = 0;
             descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -847,7 +854,7 @@ public:
             descriptorWrites[0].pBufferInfo = &bufferInfo;
 
             descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrites[1].dstSet = descriptorSets[i];
+            descriptorWrites[1].dstSet = m_descriptorSets[i];
             descriptorWrites[1].dstBinding = 1;
             descriptorWrites[1].dstArrayElement = 0;
             descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -871,30 +878,30 @@ public:
 
     void createCommandBuffers() 
     {
-        commandBuffers.resize(swapChainFramebuffers.size());
+        m_commandBuffers.resize(m_swapChainFramebuffers.size());
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.commandPool = pkGraphics_GetCommandPool();
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
+        allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
 
-        if (vkAllocateCommandBuffers(pkGraphics_GetDevice(), &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
+        if (vkAllocateCommandBuffers(pkGraphics_GetDevice(), &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
             throw std::runtime_error("failed to allocate command buffers!");
         }
 
-        for (size_t i = 0; i < commandBuffers.size(); i++) {
+        for (size_t i = 0; i < m_commandBuffers.size(); i++) {
             VkCommandBufferBeginInfo beginInfo{};
             beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-            if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) != VK_SUCCESS) {
+            if (vkBeginCommandBuffer(m_commandBuffers[i], &beginInfo) != VK_SUCCESS) {
                 throw std::runtime_error("failed to begin recording command buffer!");
             }
 
             VkRenderPassBeginInfo renderPassInfo{};
             renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-            renderPassInfo.renderPass = renderPass;
-            renderPassInfo.framebuffer = swapChainFramebuffers[i];
+            renderPassInfo.renderPass = m_renderPass;
+            renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
             renderPassInfo.renderArea.offset = { 0, 0 };
             renderPassInfo.renderArea.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
 
@@ -905,27 +912,27 @@ public:
             renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
             renderPassInfo.pClearValues = clearValues.data();
 
-            vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+            vkCmdBeginRenderPass(m_commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+            vkCmdBindPipeline(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 
-            VkBuffer vertexBuffers[] = { vertexBuffer };
+            VkBuffer vertexBuffers[] = { m_vertexBuffer };
             VkDeviceSize vertexOffsets[] = { 0 };
-            vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, vertexOffsets);
+            vkCmdBindVertexBuffers(m_commandBuffers[i], 0, 1, vertexBuffers, vertexOffsets);
 
-            VkBuffer instanceBuffers[] = { instanceBuffer };
+            VkBuffer instanceBuffers[] = { m_instanceBuffer };
             VkDeviceSize instanceOffsets[] = { 0 };
-            vkCmdBindVertexBuffers(commandBuffers[i], 1, 1, instanceBuffers, instanceOffsets);
+            vkCmdBindVertexBuffers(m_commandBuffers[i], 1, 1, instanceBuffers, instanceOffsets);
 
-            vkCmdBindIndexBuffer(commandBuffers[i], indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindIndexBuffer(m_commandBuffers[i], m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
-            vkCmdBindDescriptorSets(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &descriptorSets[i], 0, nullptr);
+            vkCmdBindDescriptorSets(m_commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, &m_descriptorSets[i], 0, nullptr);
 
-            vkCmdDrawIndexed(commandBuffers[i], static_cast<uint32_t>(indices.size()), static_cast<uint32_t>(instances.size()), 0, 0, 0);
+            vkCmdDrawIndexed(m_commandBuffers[i], static_cast<uint32_t>(m_indices.size()), static_cast<uint32_t>(m_instances.size()), 0, 0, 0);
 
-            vkCmdEndRenderPass(commandBuffers[i]);
+            vkCmdEndRenderPass(m_commandBuffers[i]);
 
-            if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
+            if (vkEndCommandBuffer(m_commandBuffers[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to record command buffer!");
             }
         }
@@ -968,29 +975,29 @@ public:
     }
 };
 
-HelloTriangleApplication app;
+static PkGrapicsRenderPassScene* s_pGraphicsRenderPassScene = nullptr;
 
-VkCommandBuffer& pkGraphicsRenderPassMain_GetCommandBuffer(uint32_t imageIndex)
+VkCommandBuffer& pkGraphicsRenderPassScene_GetCommandBuffer(uint32_t imageIndex)
 {
-    return app.commandBuffers[imageIndex];
+    return s_pGraphicsRenderPassScene->GetCommandBuffer(imageIndex);
 }
 
-void pkGraphicsRenderPassMain_OnSwapChainCreate()
+void pkGraphicsRenderPassScene_OnSwapChainCreate()
 {
-    app.onSwapChainCreate();
+    s_pGraphicsRenderPassScene->OnSwapChainCreate();
 }
 
-void pkGraphicsRenderPassMain_OnSwapChainDestroy()
+void pkGraphicsRenderPassScene_OnSwapChainDestroy()
 {
-    app.onSwapChainDestroy();
+    s_pGraphicsRenderPassScene->OnSwapChainDestroy();
 }
 
-void pkGraphicsRenderPassMain_Initialise()
+void pkGraphicsRenderPassScene_Initialise()
 {
-    app.initVulkan();
+    s_pGraphicsRenderPassScene = new PkGrapicsRenderPassScene();
 }
 
-void pkGraphicsRenderPassMain_Cleanup()
+void pkGraphicsRenderPassScene_Cleanup()
 {
-    app.cleanup();
+    delete(s_pGraphicsRenderPassScene);
 }

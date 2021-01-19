@@ -4,12 +4,12 @@
 
 #include <stdint.h>
 
-VkCommandBuffer& graphicsImgui_GetCommandBuffer(uint32_t imageIndex);
+VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex);
 
-void graphicsImgui_Update();
+void pkGraphicsRenderPassImgui_Update();
 
-void graphicsImgui_OnSwapChainCreate();
-void graphicsImgui_OnSwapChainDestroy();
+void pkGraphicsRenderPassImgui_OnSwapChainCreate();
+void pkGraphicsRenderPassImgui_OnSwapChainDestroy();
 
-void graphicsImgui_Initialise();
-void graphicsImgui_Cleanup();
+void pkGraphicsRenderPassImgui_Initialise();
+void pkGraphicsRenderPassImgui_Cleanup();

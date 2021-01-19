@@ -207,7 +207,7 @@ static void destroyCommandBuffers()
     }
 }
 
-VkCommandBuffer& graphicsImgui_GetCommandBuffer(uint32_t imageIndex)
+VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
 {
     ImDrawData* pDrawData = ImGui::GetDrawData();
 
@@ -253,7 +253,7 @@ VkCommandBuffer& graphicsImgui_GetCommandBuffer(uint32_t imageIndex)
     return s_commandBuffers[imageIndex];
 }
 
-void graphicsImgui_Update()
+void pkGraphicsRenderPassImgui_Update()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -262,21 +262,21 @@ void graphicsImgui_Update()
     ImGui::Render();
 }
 
-void graphicsImgui_OnSwapChainCreate()
+void pkGraphicsRenderPassImgui_OnSwapChainCreate()
 {
     createRenderPass();
     createFrameBuffers();
     createCommandBuffers();
 }
 
-void graphicsImgui_OnSwapChainDestroy()
+void pkGraphicsRenderPassImgui_OnSwapChainDestroy()
 {
     destroyCommandBuffers();
     destroyFrameBuffers();
     destroyRenderPass();
 }
 
-void graphicsImgui_Initialise()
+void pkGraphicsRenderPassImgui_Initialise()
 {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -294,7 +294,7 @@ void graphicsImgui_Initialise()
     createCommandPools();
     createDescriptorPool();
 
-    graphicsImgui_OnSwapChainCreate();
+    pkGraphicsRenderPassImgui_OnSwapChainCreate();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(pkGraphicsWindow_GetWindow(), true);
@@ -338,9 +338,9 @@ void graphicsImgui_Initialise()
     }
 }
 
-void graphicsImgui_Cleanup()
+void pkGraphicsRenderPassImgui_Cleanup()
 {
-    graphicsImgui_OnSwapChainDestroy();
+    pkGraphicsRenderPassImgui_OnSwapChainDestroy();
 
     destroyDescriptorPool();
     destroyCommandPools();

@@ -2,7 +2,7 @@
 
 #include "graphics/graphics.h"
 #include "graphics/graphicsRenderPassImgui.h"
-#include "graphics/graphicsRenderPassMain.h"
+#include "graphics/graphicsRenderPassScene.h"
 #include "graphics/graphicsWindow.h"
 #include "camera/camera.h"
 
@@ -23,21 +23,21 @@ static std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 
 static void onSwapChainCreate()
 {
-	pkGraphicsRenderPassMain_OnSwapChainCreate();
-	graphicsImgui_OnSwapChainCreate();
+	pkGraphicsRenderPassScene_OnSwapChainCreate();
+	pkGraphicsRenderPassImgui_OnSwapChainCreate();
 }
 
 static void onSwapChainDestroy()
 {
-	graphicsImgui_OnSwapChainDestroy();
-	pkGraphicsRenderPassMain_OnSwapChainDestroy();
+	pkGraphicsRenderPassImgui_OnSwapChainDestroy();
+	pkGraphicsRenderPassScene_OnSwapChainDestroy();
 }
 
 static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
 	buffers.resize(2);
-	buffers[0] = pkGraphicsRenderPassMain_GetCommandBuffer(imageIndex);
-	buffers[1] = graphicsImgui_GetCommandBuffer(imageIndex);
+	buffers[0] = pkGraphicsRenderPassScene_GetCommandBuffer(imageIndex);
+	buffers[1] = pkGraphicsRenderPassImgui_GetCommandBuffer(imageIndex);
 }
 
 static void gameUpdate()
@@ -50,7 +50,7 @@ static void gameUpdate()
 
 	pkCamera_Update(s_graphicsModelViewProjection, dt);
 
-	graphicsImgui_Update();
+	pkGraphicsRenderPassImgui_Update();
 
 	pkGraphics_RenderAndPresentFrame();
 }
@@ -67,16 +67,16 @@ static void gameInitialise()
 
 	pkGraphics_Initialise(s_graphicsModelViewProjection, onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
 
-	pkGraphicsRenderPassMain_Initialise();
-	graphicsImgui_Initialise();
+	pkGraphicsRenderPassScene_Initialise();
+	pkGraphicsRenderPassImgui_Initialise();
 }
 
 static void gameCleanup()
 {
 	pkGraphics_WaitIdle();
 
-	graphicsImgui_Cleanup();
-	pkGraphicsRenderPassMain_Cleanup();
+	pkGraphicsRenderPassImgui_Cleanup();
+	pkGraphicsRenderPassScene_Cleanup();
 
 	pkGraphics_Cleanup();
 

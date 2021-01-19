@@ -23,7 +23,7 @@
     <ClCompile Include="code\game.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp" />
     <ClCompile Include="code\graphics\graphicsAllocator.cpp" />
-    <ClCompile Include="code\graphics\graphicsRenderPassMain.cpp" />
+    <ClCompile Include="code\graphics\graphicsRenderPassScene.cpp" />
     <ClCompile Include="code\graphics\graphics.cpp" />
     <ClCompile Include="code\graphics\graphicsSurface.cpp" />
     <ClCompile Include="code\graphics\graphicsSwapChain.cpp" />
@@ -43,7 +43,7 @@
     <ClInclude Include="code\game.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h" />
     <ClInclude Include="code\graphics\graphicsAllocator.h" />
-    <ClInclude Include="code\graphics\graphicsRenderPassMain.h" />
+    <ClInclude Include="code\graphics\graphicsRenderPassScene.h" />
     <ClInclude Include="code\graphics\graphics.h" />
     <ClInclude Include="code\graphics\graphicsSurface.h" />
     <ClInclude Include="code\graphics\graphicsSwapChain.h" />
