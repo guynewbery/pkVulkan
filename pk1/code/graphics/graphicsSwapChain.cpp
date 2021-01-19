@@ -129,24 +129,10 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
     {
         s_swapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, s_swapChain.swapChainImages[i], s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
-
-    uint32_t w = s_swapChain.swapChainExtent.width;
-    uint32_t h = s_swapChain.swapChainExtent.height;
-
-    pkGraphicsUtils_CreateImage(device, w, h, 1, maxMsaaSampleCount, s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.colorImage, s_swapChain.colorImageView, s_swapChain.colorImageAllocation);
- 
-    VkFormat depthFormat = pkGraphicsUtils_FindDepthFormat(physicalDevice);
-    pkGraphicsUtils_CreateImage(device, w, h, 1, maxMsaaSampleCount, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, s_swapChain.depthImage, s_swapChain.depthImageView, s_swapChain.depthImageAllocation);
 }
 
 void pkGraphicsSwapChain_Destroy(VkDevice device)
 {
-    vkDestroyImageView(device, s_swapChain.depthImageView, nullptr);
-    vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.depthImage, s_swapChain.depthImageAllocation);
-
-    vkDestroyImageView(device, s_swapChain.colorImageView, nullptr);
-    vmaDestroyImage(pkGraphicsAllocator_GetAllocator(), s_swapChain.colorImage, s_swapChain.colorImageAllocation);
-
     for (VkImageView imageView : s_swapChain.swapChainImageViews)
     {
         vkDestroyImageView(device, imageView, nullptr);

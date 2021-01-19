@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vulkan/vulkan_core.h>
-#include <vk_mem_alloc.h>
 
 #include <vector>
 
@@ -15,14 +14,6 @@ struct PkGraphicsSwapChain
 
 	VkSurfaceFormatKHR surfaceFormat;
 	VkPresentModeKHR presentMode;
-
-	VkImage colorImage;
-	VkImageView colorImageView;
-	VmaAllocation colorImageAllocation;
-
-	VkImage depthImage;
-	VkImageView depthImageView;
-	VmaAllocation depthImageAllocation;
 };
 
 PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain();
