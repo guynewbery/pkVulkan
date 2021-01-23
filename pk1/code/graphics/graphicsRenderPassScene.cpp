@@ -908,7 +908,7 @@ private:
 
     void populateInstanceData()
     {
-        uint32_t boardDimensions = 24;
+        uint32_t boardDimensions = 1;
 
         const uint32_t instanceCount = boardDimensions * boardDimensions;
 
@@ -918,8 +918,8 @@ private:
 
         float rowStat = tileSize * boardDimensions / static_cast<float>(2.0f);
 
-        float x = -rowStat;
-        float y = -rowStat;
+        float x = 0.0f;// -rowStat;
+        float y = 0.0f;// -rowStat;
         uint32_t xStep = 0;
 
         float rot = 0.0f;

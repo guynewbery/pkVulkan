@@ -4,7 +4,6 @@
 #include "graphics/graphicsRenderPassImgui.h"
 #include "graphics/graphicsRenderPassScene.h"
 #include "camera/camera.h"
-
 #include "imgui/imgui.h"
 
 #include <GLFW/glfw3.h>
@@ -36,7 +35,7 @@ static void updateGame()
 	glfwPollEvents();
 
 	pkGraphicsRenderPassImgui_BeginFrame();
-	ImGui::ShowDemoWindow();
+	//ImGui::ShowDemoWindow();
 
 	pkCamera_Update(s_pData->graphicsModelViewProjection, dt);
 

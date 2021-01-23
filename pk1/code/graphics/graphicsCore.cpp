@@ -13,6 +13,9 @@
 #define VULKAN_VALIDATION_ENABLED 0
 #endif //_DEBUG
 
+static const uint32_t WINDOW_WIDTH = 1280;
+static const uint32_t WINDOW_HEIGHT = 720;
+
 struct PkGraphicsCoreData
 {
     GLFWwindow* pWindow = nullptr;
@@ -149,9 +152,6 @@ static void windowResizeCallback(GLFWwindow* pWindow, int width, int height)
 static void createWindow(const char* pWindowName)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-    static const uint32_t WINDOW_WIDTH = 1920;
-    static const uint32_t WINDOW_HEIGHT = 1080;
 
     s_pData->pWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, pWindowName, nullptr, nullptr);
     glfwSetFramebufferSizeCallback(s_pData->pWindow, windowResizeCallback);

@@ -11,7 +11,7 @@ struct PkGraphicsModelViewProjection
     glm::mat4 view = glm::mat4(1.0f);
 
     float fieldOfView = 45.0f;
-    float nearViewPlane = 1.0f;
+    float nearViewPlane = 0.1f;
     float farViewPlane = 100.0f;
 };
 
