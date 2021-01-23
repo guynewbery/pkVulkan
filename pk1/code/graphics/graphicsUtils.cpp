@@ -1,7 +1,5 @@
 #include "graphicsUtils.h"
 
-#include "graphics/graphicsAllocator.h"
-
 #include <iostream>
 
 PkGraphicsSwapChainSupport pkGraphicsUtils_QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)

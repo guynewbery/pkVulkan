@@ -1,18 +1,10 @@
 #include "graphicsRenderPassScene.h"
 
-#include "graphics/graphicsAllocator.h"
 #include "graphics/graphicsCore.h"
-#include "graphics/graphicsSurface.h"
 #include "graphics/graphicsSwapChain.h"
 #include "graphics/graphicsUtils.h"
-#include "graphics/graphicsWindow.h"
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 
 #include <glm/gtx/hash.hpp>
-
-#include <vk_mem_alloc.h>
 
 #include <stb_image.h>
 
@@ -20,14 +12,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <stdexcept>
-#include <algorithm>
-#include <vector>
-#include <cstring>
-#include <cstdlib>
-#include <cstdint>
 #include <array>
-#include <unordered_map>
 
 static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
 

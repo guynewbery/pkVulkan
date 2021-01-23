@@ -1,11 +1,8 @@
 #include "graphicsRenderPassImgui.h"
 
-#include "graphics/graphicsAllocator.h"
 #include "graphics/graphicsCore.h"
-#include "graphics/graphicsSurface.h"
 #include "graphics/graphicsSwapChain.h"
 #include "graphics/graphicsUtils.h"
-#include "graphics/graphicsWindow.h"
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_vulkan.h"
@@ -253,12 +250,15 @@ VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
     return s_commandBuffers[imageIndex];
 }
 
-void pkGraphicsRenderPassImgui_Update()
+void pkGraphicsRenderPassImgui_BeginFrame()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
-    ImGui::ShowDemoWindow();
+}
+
+void pkGraphicsRenderPassImgui_EndFrame()
+{
     ImGui::Render();
 }
 
@@ -297,7 +297,7 @@ void pkGraphicsRenderPassImgui_Initialise()
     pkGraphicsRenderPassImgui_OnSwapChainCreate();
 
     // Setup Platform/Renderer backends
-    ImGui_ImplGlfw_InitForVulkan(pkGraphicsWindow_GetWindow(), true);
+    ImGui_ImplGlfw_InitForVulkan(PkGraphicsCore::GetWindow(), true);
     ImGui_ImplVulkan_InitInfo init_info = {};
     init_info.Instance = PkGraphicsCore::GetInstance();
     init_info.PhysicalDevice = PkGraphicsCore::GetPhysicalDevice();

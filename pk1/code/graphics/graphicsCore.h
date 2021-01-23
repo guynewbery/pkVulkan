@@ -3,10 +3,16 @@
 #include <vulkan/vulkan_core.h>
 #include <vk_mem_alloc.h>
 
+struct GLFWwindow;
+
 class PkGraphicsCore
 {
 public:
     PkGraphicsCore() = delete;
+
+    static GLFWwindow* GetWindow();
+    static bool HasWindowBeenResized();
+    static void ResetWindowResizedFlag();
 
     static VkInstance GetInstance();
     static VkSurfaceKHR GetSurface();
@@ -22,6 +28,6 @@ public:
 
     static VkSampleCountFlagBits GetMaxMsaaSampleCount();
 
-    static void InitialiseGraphicsCore();
+    static void InitialiseGraphicsCore(const char* pWindowName);
     static void CleanupGraphicsCore();
 };

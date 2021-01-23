@@ -23,13 +23,10 @@
     <ClCompile Include="code\game.cpp" />
     <ClCompile Include="code\graphics\graphics.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp" />
-    <ClCompile Include="code\graphics\graphicsAllocator.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassScene.cpp" />
     <ClCompile Include="code\graphics\graphicsCore.cpp" />
-    <ClCompile Include="code\graphics\graphicsSurface.cpp" />
     <ClCompile Include="code\graphics\graphicsSwapChain.cpp" />
     <ClCompile Include="code\graphics\graphicsUtils.cpp" />
-    <ClCompile Include="code\graphics\graphicsWindow.cpp" />
     <ClCompile Include="code\imgui\imgui.cpp" />
     <ClCompile Include="code\imgui\imgui_demo.cpp" />
     <ClCompile Include="code\imgui\imgui_draw.cpp" />
@@ -44,13 +41,10 @@
     <ClInclude Include="code\game.h" />
     <ClInclude Include="code\graphics\graphics.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h" />
-    <ClInclude Include="code\graphics\graphicsAllocator.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassScene.h" />
     <ClInclude Include="code\graphics\graphicsCore.h" />
-    <ClInclude Include="code\graphics\graphicsSurface.h" />
     <ClInclude Include="code\graphics\graphicsSwapChain.h" />
     <ClInclude Include="code\graphics\graphicsUtils.h" />
-    <ClInclude Include="code\graphics\graphicsWindow.h" />
     <ClInclude Include="code\imgui\imconfig.h" />
     <ClInclude Include="code\imgui\imgui.h" />
     <ClInclude Include="code\imgui\imgui_impl_glfw.h" />

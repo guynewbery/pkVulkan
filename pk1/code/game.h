@@ -1,3 +1,9 @@
 #pragma once
 
-void GameMain();
+class PkGame
+{
+public:
+	PkGame() = delete;
+
+	static void GameMain();
+};

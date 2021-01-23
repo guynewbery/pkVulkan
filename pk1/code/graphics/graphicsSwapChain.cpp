@@ -1,9 +1,7 @@
 #include "graphicsSwapChain.h"
 
-#include "graphics/graphicsAllocator.h"
 #include "graphics/graphicsCore.h"
 #include "graphics/graphicsUtils.h"
-#include "graphics/graphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -53,7 +51,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     else
     {
         int width, height;
-        glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
+        glfwGetFramebufferSize(PkGraphicsCore::GetWindow(), &width, &height);
 
         VkExtent2D actualExtent =
         {

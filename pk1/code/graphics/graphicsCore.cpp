@@ -1,18 +1,11 @@
 #include "graphicsCore.h"
 
-#include "graphics/graphicsAllocator.h"
-#include "graphics/graphicsSurface.h"
 #include "graphics/graphicsUtils.h"
-#include "graphics/graphicsWindow.h"
 
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
-
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 #include <set>
-#include <array>
 
 #ifdef _DEBUG
 #define VULKAN_VALIDATION_ENABLED 1
@@ -22,6 +15,9 @@
 
 struct PkGraphicsCoreData
 {
+    GLFWwindow* pWindow = nullptr;
+    bool windowResized = false;
+
     VkInstance instance = VK_NULL_HANDLE;
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -145,6 +141,22 @@ static std::vector<const char*> getRequiredExtensions()
     return extensions;
 }
 
+static void windowResizeCallback(GLFWwindow* pWindow, int width, int height)
+{
+    s_pData->windowResized = true;
+}
+
+static void createWindow(const char* pWindowName)
+{
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+    static const uint32_t WINDOW_WIDTH = 1920;
+    static const uint32_t WINDOW_HEIGHT = 1080;
+
+    s_pData->pWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, pWindowName, nullptr, nullptr);
+    glfwSetFramebufferSizeCallback(s_pData->pWindow, windowResizeCallback);
+}
+
 static void createInstance()
 {
 #if VULKAN_VALIDATION_ENABLED
@@ -192,7 +204,7 @@ static void createInstance()
 
 static void createSurface()
 {
-    if (glfwCreateWindowSurface(s_pData->instance, pkGraphicsWindow_GetWindow(), nullptr, &s_pData->surface) != VK_SUCCESS)
+    if (glfwCreateWindowSurface(s_pData->instance, PkGraphicsCore::GetWindow(), nullptr, &s_pData->surface) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create window surface!");
     }
@@ -342,6 +354,21 @@ static void createAllocator()
     }
 }
 
+/*static*/ GLFWwindow* PkGraphicsCore::GetWindow()
+{
+    return s_pData->pWindow;
+}
+
+/*static*/ bool PkGraphicsCore::HasWindowBeenResized()
+{
+    return s_pData->windowResized;
+}
+
+/*static*/ void PkGraphicsCore::ResetWindowResizedFlag()
+{
+    s_pData->windowResized = false;
+}
+
 /*static*/ VkInstance PkGraphicsCore::GetInstance()
 {
     return s_pData->instance;
@@ -392,10 +419,11 @@ static void createAllocator()
     return s_pData->msaaSamples;
 }
 
-/*static*/ void PkGraphicsCore::InitialiseGraphicsCore()
+/*static*/ void PkGraphicsCore::InitialiseGraphicsCore(const char* pWindowName)
 {
     s_pData = new PkGraphicsCoreData();
 
+    createWindow(pWindowName);
     createInstance();
 
 #if VULKAN_VALIDATION_ENABLED
@@ -419,6 +447,7 @@ static void createAllocator()
 #endif //VULKAN_VALIDATION_ENABLED
 
     vkDestroyInstance(s_pData->instance, nullptr);
+    glfwDestroyWindow(s_pData->pWindow);
 
     delete s_pData;
 }

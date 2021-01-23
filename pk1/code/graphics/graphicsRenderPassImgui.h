@@ -6,7 +6,8 @@
 
 VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex);
 
-void pkGraphicsRenderPassImgui_Update();
+void pkGraphicsRenderPassImgui_BeginFrame();
+void pkGraphicsRenderPassImgui_EndFrame();
 
 void pkGraphicsRenderPassImgui_OnSwapChainCreate();
 void pkGraphicsRenderPassImgui_OnSwapChainDestroy();

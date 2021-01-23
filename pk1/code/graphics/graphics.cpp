@@ -1,11 +1,9 @@
 #include "graphics.h"
 
-#include "graphics/graphicsAllocator.h"
 #include "graphics/graphicsCore.h"
 #include "graphics/graphicsRenderPassImgui.h"
 #include "graphics/graphicsRenderPassScene.h"
 #include "graphics/graphicsSwapChain.h"
-#include "graphics/graphicsWindow.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -62,7 +60,8 @@ void createSyncObjects()
     {
         if (vkCreateSemaphore(PkGraphicsCore::GetDevice(), &semaphoreInfo, nullptr, &s_pData->imageAvailableSemaphores[i]) != VK_SUCCESS ||
             vkCreateSemaphore(PkGraphicsCore::GetDevice(), &semaphoreInfo, nullptr, &s_pData->renderFinishedSemaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(PkGraphicsCore::GetDevice(), &fenceInfo, nullptr, &s_pData->inFlightFences[i]) != VK_SUCCESS) {
+            vkCreateFence(PkGraphicsCore::GetDevice(), &fenceInfo, nullptr, &s_pData->inFlightFences[i]) != VK_SUCCESS) 
+        {
             throw std::runtime_error("failed to create synchronization objects for a frame!");
         }
     }
@@ -81,11 +80,11 @@ void destroySyncObjects()
 static void recreateSwapChain()
 {
     int width = 0, height = 0;
-    glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
+    glfwGetFramebufferSize(PkGraphicsCore::GetWindow(), &width, &height);
 
     while (width == 0 || height == 0)
     {
-        glfwGetFramebufferSize(pkGraphicsWindow_GetWindow(), &width, &height);
+        glfwGetFramebufferSize(PkGraphicsCore::GetWindow(), &width, &height);
         glfwWaitEvents();
     }
 
@@ -104,13 +103,11 @@ static void recreateSwapChain()
 
 /*static*/ bool PkGraphics::WindowShouldClose()
 {
-    return glfwWindowShouldClose(pkGraphicsWindow_GetWindow());
+    return glfwWindowShouldClose(PkGraphicsCore::GetWindow());
 }
 
 /*static*/ void PkGraphics::RenderAndPresentFrame()
 {
-    pkGraphicsRenderPassImgui_Update();
-
     vkWaitForFences(PkGraphicsCore::GetDevice(), 1, &s_pData->inFlightFences[s_pData->currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
@@ -171,9 +168,9 @@ static void recreateSwapChain()
 
     result = vkQueuePresentKHR(PkGraphicsCore::GetPresentQueue(), &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || pkGraphicsWindow_IsResized())
+    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || PkGraphicsCore::HasWindowBeenResized())
     {
-        pkGraphicsWindow_ResetResized();
+        PkGraphicsCore::ResetWindowResizedFlag();
         recreateSwapChain();
     }
     else if (result != VK_SUCCESS)
@@ -188,9 +185,7 @@ static void recreateSwapChain()
 {
     s_pData = new PkGraphicsData();
 
-    pkGraphicsWindow_Create(pWindowName);
-
-    PkGraphicsCore::InitialiseGraphicsCore();
+    PkGraphicsCore::InitialiseGraphicsCore(pWindowName);
 
     pkGraphicsSwapChain_Create(PkGraphicsCore::GetInstance(), PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetDevice(), PkGraphicsCore::GetMaxMsaaSampleCount());
 
@@ -212,8 +207,6 @@ static void recreateSwapChain()
     pkGraphicsSwapChain_Destroy(PkGraphicsCore::GetDevice());
 
     PkGraphicsCore::CleanupGraphicsCore();
-
-    pkGraphicsWindow_Destroy();
 
     delete s_pData;
 }

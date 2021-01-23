@@ -45,19 +45,10 @@
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="code\graphics\graphicsAllocator.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\graphicsSurface.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="code\graphics\graphicsSwapChain.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\graphicsUtils.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="code\graphics\graphicsWindow.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
     <ClCompile Include="code\camera\camera.cpp">
@@ -107,19 +98,10 @@
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="code\graphics\graphicsAllocator.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\graphicsSurface.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="code\graphics\graphicsSwapChain.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\graphicsUtils.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="code\graphics\graphicsWindow.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\camera\camera.h">
