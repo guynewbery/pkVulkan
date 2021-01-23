@@ -306,7 +306,7 @@ void pkGraphicsRenderPassImgui_Initialise()
     init_info.Queue = PkGraphicsCore::GetGraphicsQueue();
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = s_descriptorPool;
-    init_info.Allocator = nullptr;// pkGraphicsAllocator_GetAllocator()->GetAllocationCallbacks();
+    init_info.Allocator = nullptr;// PkGraphicsCore::GetAllocator()->GetAllocationCallbacks();
     init_info.MinImageCount = 2;
     init_info.ImageCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
     init_info.CheckVkResultFn = check_vk_result;

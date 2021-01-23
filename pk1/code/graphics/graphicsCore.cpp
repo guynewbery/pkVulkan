@@ -26,6 +26,7 @@ struct PkGraphicsCoreData
     VkSurfaceKHR surface = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
+    VmaAllocator allocator = VK_NULL_HANDLE;
 
     VkQueue graphicsQueue = VK_NULL_HANDLE;
     VkQueue presentQueue = VK_NULL_HANDLE;
@@ -327,6 +328,20 @@ static void createLogicalDevice()
     vkGetDeviceQueue(s_pData->device, indices.presentFamily.value(), 0, &s_pData->presentQueue);
 }
 
+static void createAllocator()
+{
+    VmaAllocatorCreateInfo allocatorInfo = {};
+    allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_2;
+    allocatorInfo.physicalDevice = s_pData->physicalDevice;
+    allocatorInfo.device = s_pData->device;
+    allocatorInfo.instance = s_pData->instance;
+
+    if (vmaCreateAllocator(&allocatorInfo, &s_pData->allocator) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create allocator!");
+    }
+}
+
 /*static*/ VkInstance PkGraphicsCore::GetInstance()
 {
     return s_pData->instance;
@@ -345,6 +360,11 @@ static void createLogicalDevice()
 /*static*/ VkDevice PkGraphicsCore::GetDevice()
 {
     return s_pData->device;
+}
+
+/*static*/ VmaAllocator PkGraphicsCore::GetAllocator()
+{
+    return s_pData->allocator;
 }
 
 /*static*/ VkQueue PkGraphicsCore::GetGraphicsQueue()
@@ -385,10 +405,12 @@ static void createLogicalDevice()
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+    createAllocator();
 }
 
 /*static*/ void PkGraphicsCore::CleanupGraphicsCore()
 {
+    vmaDestroyAllocator(s_pData->allocator);
     vkDestroyDevice(s_pData->device, nullptr);
     vkDestroySurfaceKHR(s_pData->instance, s_pData->surface, nullptr);
 

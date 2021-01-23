@@ -1,10 +1,10 @@
-#include "graphicsAllocator.h"
+/*#include "graphicsAllocator.h"
 
 #include <iostream>
 
 VmaAllocator s_allocator = VK_NULL_HANDLE;
 
-VmaAllocator pkGraphicsAllocator_GetAllocator()
+VmaAllocator PkGraphicsCore::GetAllocator()
 {
     return s_allocator;
 }
@@ -27,3 +27,4 @@ void pkGraphicsAllocator_Destroy()
 {
     vmaDestroyAllocator(s_allocator);
 }
+*/

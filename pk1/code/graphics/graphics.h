@@ -2,8 +2,6 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include <vector>
-
 struct PkGraphicsModelViewProjection;
 
 class PkGraphics

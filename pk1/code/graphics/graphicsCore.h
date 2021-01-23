@@ -1,8 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan_core.h>
-
-#include <vector>
+#include <vk_mem_alloc.h>
 
 class PkGraphicsCore
 {
@@ -13,6 +12,7 @@ public:
     static VkSurfaceKHR GetSurface();
     static VkPhysicalDevice GetPhysicalDevice();
     static VkDevice GetDevice();
+    static VmaAllocator GetAllocator();
 
     static VkQueue GetGraphicsQueue();
     static VkQueue GetPresentQueue();

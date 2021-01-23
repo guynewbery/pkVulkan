@@ -12,7 +12,7 @@
 
 #include <iostream>
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
+#define MAX_FRAMES_IN_FLIGHT 2
 
 struct PkGraphicsData
 {
@@ -192,8 +192,6 @@ static void recreateSwapChain()
 
     PkGraphicsCore::InitialiseGraphicsCore();
 
-    pkGraphicsAllocator_Create(PkGraphicsCore::GetInstance(), PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetDevice());
-
     pkGraphicsSwapChain_Create(PkGraphicsCore::GetInstance(), PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetDevice(), PkGraphicsCore::GetMaxMsaaSampleCount());
 
     pkGraphicsRenderPassScene_Initialise(rModelViewProjection);
@@ -212,8 +210,6 @@ static void recreateSwapChain()
     pkGraphicsRenderPassScene_Cleanup();
 
     pkGraphicsSwapChain_Destroy(PkGraphicsCore::GetDevice());
-
-    pkGraphicsAllocator_Destroy();
 
     PkGraphicsCore::CleanupGraphicsCore();
 
