@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include "library_macros.h"
+
 #include "graphics/graphics.h"
 #include "graphics/graphicsRenderPassImgui.h"
 #include "graphics/graphicsRenderPassScene.h"
@@ -16,7 +18,7 @@ static const uint32_t VERSION_MAJOR_NUMBER = 0;
 static const uint32_t VERSION_MINOR_NUMBER = 0;
 static const uint32_t VERSION_PATCH_NUMBER = 1;
 
-struct PkGameData
+struct GameData
 {
 	PkGraphicsModelViewProjection graphicsModelViewProjection;
 
@@ -24,7 +26,7 @@ struct PkGameData
 	std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 };
 
-static PkGameData* s_pData = nullptr;
+static GameData* s_pData = nullptr;
 
 static void updateGame()
 {
@@ -46,7 +48,7 @@ static void updateGame()
 
 static void initialiseGame()
 {
-	s_pData = new PkGameData();
+	s_pData = new GameData();
 
 	char windowName[128];
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
@@ -67,7 +69,7 @@ static void cleanupGame()
 	delete s_pData;
 }
 
-/*static*/ void PkGame::GameMain()
+void RunGame()
 {
 	initialiseGame();
 

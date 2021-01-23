@@ -1,4 +1,3 @@
-#include "library_macros.h"
 #include "game.h"
 
 #include <iostream>
@@ -7,7 +6,7 @@ int main()
 {
     try
     {
-        PkGame::GameMain();
+        RunGame();
     }
     catch (const std::exception& e)
     {
