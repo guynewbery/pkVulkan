@@ -21,10 +21,11 @@
   <ItemGroup>
     <ClCompile Include="code\camera\camera.cpp" />
     <ClCompile Include="code\game.cpp" />
+    <ClCompile Include="code\graphics\graphics.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp" />
     <ClCompile Include="code\graphics\graphicsAllocator.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassScene.cpp" />
-    <ClCompile Include="code\graphics\graphics.cpp" />
+    <ClCompile Include="code\graphics\graphicsCore.cpp" />
     <ClCompile Include="code\graphics\graphicsSurface.cpp" />
     <ClCompile Include="code\graphics\graphicsSwapChain.cpp" />
     <ClCompile Include="code\graphics\graphicsUtils.cpp" />
@@ -41,10 +42,11 @@
   <ItemGroup>
     <ClInclude Include="code\camera\camera.h" />
     <ClInclude Include="code\game.h" />
+    <ClInclude Include="code\graphics\graphics.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h" />
     <ClInclude Include="code\graphics\graphicsAllocator.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassScene.h" />
-    <ClInclude Include="code\graphics\graphics.h" />
+    <ClInclude Include="code\graphics\graphicsCore.h" />
     <ClInclude Include="code\graphics\graphicsSurface.h" />
     <ClInclude Include="code\graphics\graphicsSwapChain.h" />
     <ClInclude Include="code\graphics\graphicsUtils.h" />

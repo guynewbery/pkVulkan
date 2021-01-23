@@ -1,9 +1,7 @@
 #include "game.h"
 
 #include "graphics/graphics.h"
-#include "graphics/graphicsRenderPassImgui.h"
 #include "graphics/graphicsRenderPassScene.h"
-#include "graphics/graphicsWindow.h"
 #include "camera/camera.h"
 
 #include <GLFW/glfw3.h>
@@ -21,25 +19,6 @@ static PkGraphicsModelViewProjection s_graphicsModelViewProjection;
 static std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
 static std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 
-static void onSwapChainCreate()
-{
-	pkGraphicsRenderPassScene_OnSwapChainCreate();
-	pkGraphicsRenderPassImgui_OnSwapChainCreate();
-}
-
-static void onSwapChainDestroy()
-{
-	pkGraphicsRenderPassImgui_OnSwapChainDestroy();
-	pkGraphicsRenderPassScene_OnSwapChainDestroy();
-}
-
-static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
-{
-	buffers.resize(2);
-	buffers[0] = pkGraphicsRenderPassScene_GetCommandBuffer(imageIndex);
-	buffers[1] = pkGraphicsRenderPassImgui_GetCommandBuffer(imageIndex);
-}
-
 static void gameUpdate()
 {
 	lastTime = currentTime;
@@ -50,9 +29,7 @@ static void gameUpdate()
 
 	pkCamera_Update(s_graphicsModelViewProjection, dt);
 
-	pkGraphicsRenderPassImgui_Update();
-
-	pkGraphics_RenderAndPresentFrame();
+	PkGraphics::RenderAndPresentFrame();
 }
 
 static void gameInitialise()
@@ -63,24 +40,13 @@ static void gameInitialise()
 
 	char windowName[128];
 	sprintf_s(windowName, "%s version %d.%d.%d", GAME_NAME, VERSION_MAJOR_NUMBER, VERSION_MINOR_NUMBER, VERSION_PATCH_NUMBER);
-	pkGraphicsWindow_Create(windowName);
 
-	pkGraphics_Initialise(onSwapChainCreate, onSwapChainDestroy, getCommandBuffers);
-
-	pkGraphicsRenderPassScene_Initialise(s_graphicsModelViewProjection);
-	pkGraphicsRenderPassImgui_Initialise();
+	PkGraphics::InitialiseGraphics(windowName, s_graphicsModelViewProjection);
 }
 
 static void gameCleanup()
 {
-	pkGraphics_WaitIdle();
-
-	pkGraphicsRenderPassImgui_Cleanup();
-	pkGraphicsRenderPassScene_Cleanup();
-
-	pkGraphics_Cleanup();
-
-	pkGraphicsWindow_Destroy();
+	PkGraphics::CleanupGraphics();
 
 	glfwTerminate();
 }
@@ -89,7 +55,7 @@ void GameMain()
 {
 	gameInitialise();
 
-	while (!glfwWindowShouldClose(pkGraphicsWindow_GetWindow()))
+	while (!PkGraphics::WindowShouldClose())
 	{
 		gameUpdate();
 	}

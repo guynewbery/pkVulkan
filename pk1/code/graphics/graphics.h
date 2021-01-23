@@ -4,22 +4,16 @@
 
 #include <vector>
 
-VkInstance pkGraphics_GetInstance();
-VkPhysicalDevice pkGraphics_GetPhysicalDevice();
-VkDevice pkGraphics_GetDevice();
-VkQueue pkGraphics_GetGraphicsQueue();
+struct PkGraphicsModelViewProjection;
 
-void pkGraphics_GetPhysicalDeviceProperties(VkPhysicalDeviceProperties* physicalDeviceProperties);
-void pkGraphics_GetFormatProperties(VkFormat imageFormat, VkFormatProperties* formatProperties);
+class PkGraphics
+{
+public:
+    PkGraphics() = delete;
 
-VkSampleCountFlagBits pkGraphics_GetMaxMsaaSampleCount();
+    static bool WindowShouldClose();
+    static void RenderAndPresentFrame();
 
-void pkGraphics_WaitIdle();
-void pkGraphics_RenderAndPresentFrame();
-
-void pkGraphics_Initialise(
-    void (*pOnSwapChainCreate)(), 
-    void (*pOnSwapChainDestroy)(),
-    void (*pGetCommandBuffers)(uint32_t, std::vector<VkCommandBuffer>&));
-
-void pkGraphics_Cleanup();
+    static void InitialiseGraphics(const char* pWindowName, PkGraphicsModelViewProjection& rModelViewProjection);
+    static void CleanupGraphics();
+};

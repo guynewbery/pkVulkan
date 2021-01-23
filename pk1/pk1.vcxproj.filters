@@ -45,9 +45,6 @@
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
-    <ClCompile Include="code\graphics\graphics.cpp">
-      <Filter>code\graphics</Filter>
-    </ClCompile>
     <ClCompile Include="code\graphics\graphicsAllocator.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
@@ -67,6 +64,12 @@
       <Filter>code\camera</Filter>
     </ClCompile>
     <ClCompile Include="code\graphics\graphicsRenderPassScene.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphics.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="code\graphics\graphicsCore.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
   </ItemGroup>
@@ -104,9 +107,6 @@
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="code\graphics\graphics.h">
-      <Filter>code\graphics</Filter>
-    </ClInclude>
     <ClInclude Include="code\graphics\graphicsAllocator.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
@@ -126,6 +126,12 @@
       <Filter>code\camera</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\graphicsRenderPassScene.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphics.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsCore.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
   </ItemGroup>

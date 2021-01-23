@@ -1,8 +1,8 @@
-#pragma once
+/*#pragma once
 
 #include <vulkan/vulkan_core.h>
 
-VkSurfaceKHR pkGraphicsSurface_GetSurface();
+VkSurfaceKHR PkGraphicsCore::GetSurface();
 
 void pkGraphicsSurface_Create(VkInstance instance);
-void pkGraphicsSurface_Destroy(VkInstance instance);
+void pkGraphicsSurface_Destroy(VkInstance instance);*/

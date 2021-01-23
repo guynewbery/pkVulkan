@@ -1,7 +1,7 @@
 #include "graphicsRenderPassImgui.h"
 
-#include "graphics/graphics.h"
 #include "graphics/graphicsAllocator.h"
+#include "graphics/graphicsCore.h"
 #include "graphics/graphicsSurface.h"
 #include "graphics/graphicsSwapChain.h"
 #include "graphics/graphicsUtils.h"
@@ -37,7 +37,7 @@ static void createCommandPools()
 {
     s_commandPools.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
 
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(pkGraphics_GetPhysicalDevice(), pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
     {
@@ -46,7 +46,7 @@ static void createCommandPools()
         poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-        if (vkCreateCommandPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &s_commandPools[i]) != VK_SUCCESS)
+        if (vkCreateCommandPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_commandPools[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create graphics command pool!");
         }
@@ -57,7 +57,7 @@ static void destroyCommandPools()
 {
     for (VkCommandPool commandPool : s_commandPools)
     {
-        vkDestroyCommandPool(pkGraphics_GetDevice(), commandPool, nullptr);
+        vkDestroyCommandPool(PkGraphicsCore::GetDevice(), commandPool, nullptr);
     }
 }
 
@@ -85,7 +85,7 @@ static void createDescriptorPool()
     poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
     poolInfo.pPoolSizes = poolSizes;
 
-    if (vkCreateDescriptorPool(pkGraphics_GetDevice(), &poolInfo, nullptr, &s_descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_descriptorPool) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
@@ -93,7 +93,7 @@ static void createDescriptorPool()
 
 static void destroyDescriptorPool()
 {
-    vkDestroyDescriptorPool(pkGraphics_GetDevice(), s_descriptorPool, nullptr);
+    vkDestroyDescriptorPool(PkGraphicsCore::GetDevice(), s_descriptorPool, nullptr);
 }
 
 static void createRenderPass()
@@ -134,7 +134,7 @@ static void createRenderPass()
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(pkGraphics_GetDevice(), &renderPassInfo, nullptr, &s_renderPass) != VK_SUCCESS)
+    if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &s_renderPass) != VK_SUCCESS)
     {
         throw std::runtime_error("Could not create Dear ImGui's render pass");
     }
@@ -142,7 +142,7 @@ static void createRenderPass()
 
 static void destroyRenderPass()
 {
-    vkDestroyRenderPass(pkGraphics_GetDevice(), s_renderPass, nullptr);
+    vkDestroyRenderPass(PkGraphicsCore::GetDevice(), s_renderPass, nullptr);
 }
 
 static void createFrameBuffers()
@@ -165,7 +165,7 @@ static void createFrameBuffers()
         framebufferInfo.height = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(pkGraphics_GetDevice(), &framebufferInfo, nullptr, &s_frameBuffers[i]) != VK_SUCCESS)
+        if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &s_frameBuffers[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create framebuffer!");
         }
@@ -176,7 +176,7 @@ static void destroyFrameBuffers()
 {
     for (VkFramebuffer framebuffer : s_frameBuffers)
     {
-        vkDestroyFramebuffer(pkGraphics_GetDevice(), framebuffer, nullptr);
+        vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
     }
 }
 
@@ -192,7 +192,7 @@ static void createCommandBuffers()
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = 1;
 
-        if (vkAllocateCommandBuffers(pkGraphics_GetDevice(), &allocInfo, &s_commandBuffers[i]) != VK_SUCCESS)
+        if (vkAllocateCommandBuffers(PkGraphicsCore::GetDevice(), &allocInfo, &s_commandBuffers[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate command buffers!");
         }
@@ -203,7 +203,7 @@ static void destroyCommandBuffers()
 {
     for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
     {
-        vkFreeCommandBuffers(pkGraphics_GetDevice(), s_commandPools[i], 1, &s_commandBuffers[i]);
+        vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_commandPools[i], 1, &s_commandBuffers[i]);
     }
 }
 
@@ -211,7 +211,7 @@ VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
 {
     ImDrawData* pDrawData = ImGui::GetDrawData();
 
-    if (vkResetCommandPool(pkGraphics_GetDevice(), s_commandPools[imageIndex], 0) != VK_SUCCESS)
+    if (vkResetCommandPool(PkGraphicsCore::GetDevice(), s_commandPools[imageIndex], 0) != VK_SUCCESS)
     {
         throw std::runtime_error("vkResetCommandPool error");
     }
@@ -289,7 +289,7 @@ void pkGraphicsRenderPassImgui_Initialise()
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(pkGraphics_GetPhysicalDevice(), pkGraphicsSurface_GetSurface());
+    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     createCommandPools();
     createDescriptorPool();
@@ -299,11 +299,11 @@ void pkGraphicsRenderPassImgui_Initialise()
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(pkGraphicsWindow_GetWindow(), true);
     ImGui_ImplVulkan_InitInfo init_info = {};
-    init_info.Instance = pkGraphics_GetInstance();
-    init_info.PhysicalDevice = pkGraphics_GetPhysicalDevice();
-    init_info.Device = pkGraphics_GetDevice();
+    init_info.Instance = PkGraphicsCore::GetInstance();
+    init_info.PhysicalDevice = PkGraphicsCore::GetPhysicalDevice();
+    init_info.Device = PkGraphicsCore::GetDevice();
     init_info.QueueFamily = indices.graphicsFamily.value();
-    init_info.Queue = pkGraphics_GetGraphicsQueue();
+    init_info.Queue = PkGraphicsCore::GetGraphicsQueue();
     init_info.PipelineCache = VK_NULL_HANDLE;
     init_info.DescriptorPool = s_descriptorPool;
     init_info.Allocator = nullptr;// pkGraphicsAllocator_GetAllocator()->GetAllocationCallbacks();
@@ -330,9 +330,9 @@ void pkGraphicsRenderPassImgui_Initialise()
 
     // Upload Fonts
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(pkGraphics_GetDevice(), s_commandPools[0]);
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPools[0]);
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        pkGraphicsUtils_EndSingleTimeCommands(pkGraphics_GetDevice(), pkGraphics_GetGraphicsQueue(), s_commandPools[0], commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPools[0], commandBuffer);
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
