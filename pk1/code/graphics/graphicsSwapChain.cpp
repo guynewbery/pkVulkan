@@ -9,12 +9,17 @@
 #include <iostream>
 #include <array>
 
-static PkGraphicsSwapChain s_swapChain;
-
-PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain()
+struct PkGraphicsSwapChainData
 {
-    return s_swapChain;
-}
+    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+    VkExtent2D swapChainExtent{ 0,0 };
+
+    std::vector<VkImage> swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
+    VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
+};
+
+static PkGraphicsSwapChainData* s_pData = nullptr;
 
 VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats)
 {
@@ -66,9 +71,36 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     }
 }
 
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSampleCountFlagBits maxMsaaSampleCount)
+/*static*/ VkSwapchainKHR PkGraphicsSwapChain::GetSwapChain()
 {
-    PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, PkGraphicsCore::GetSurface());
+    return s_pData->swapChain;
+}
+
+/*static*/ VkExtent2D PkGraphicsSwapChain::GetSwapChainExtent()
+{
+    return s_pData->swapChainExtent;
+}
+
+/*static*/ uint32_t PkGraphicsSwapChain::GetNumSwapChainImages()
+{
+    return static_cast<uint32_t>(s_pData->swapChainImageViews.size());
+}
+
+/*static*/ VkImageView PkGraphicsSwapChain::GetSwapChainImageView(const uint32_t imageIndex)
+{
+    return s_pData->swapChainImageViews[imageIndex];
+}
+
+/*static*/ VkFormat PkGraphicsSwapChain::GetSwapChainImageFormat()
+{
+    return s_pData->swapChainImageFormat;
+}
+
+/*static*/ void PkGraphicsSwapChain::InitialiseGraphicsSwapChain()
+{
+    s_pData = new PkGraphicsSwapChainData();
+
+    PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -91,7 +123,7 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -110,31 +142,33 @@ void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDe
     createInfo.presentMode = presentMode;
     createInfo.clipped = VK_TRUE;
 
-    if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &s_swapChain.swapChain) != VK_SUCCESS)
+    if (vkCreateSwapchainKHR(PkGraphicsCore::GetDevice(), &createInfo, nullptr, &s_pData->swapChain) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create swap chain!");
     }
 
-    vkGetSwapchainImagesKHR(device, s_swapChain.swapChain, &imageCount, nullptr);
-    s_swapChain.swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(device, s_swapChain.swapChain, &imageCount, s_swapChain.swapChainImages.data());
+    vkGetSwapchainImagesKHR(PkGraphicsCore::GetDevice(), s_pData->swapChain, &imageCount, nullptr);
+    s_pData->swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(PkGraphicsCore::GetDevice(), s_pData->swapChain, &imageCount, s_pData->swapChainImages.data());
 
-    s_swapChain.swapChainImageFormat = surfaceFormat.format;
-    s_swapChain.swapChainExtent = extent;
+    s_pData->swapChainImageFormat = surfaceFormat.format;
+    s_pData->swapChainExtent = extent;
 
-    s_swapChain.swapChainImageViews.resize(s_swapChain.swapChainImages.size());
-    for (uint32_t i = 0; i < s_swapChain.swapChainImages.size(); i++)
+    s_pData->swapChainImageViews.resize(s_pData->swapChainImages.size());
+    for (uint32_t i = 0; i < s_pData->swapChainImages.size(); i++)
     {
-        s_swapChain.swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(device, s_swapChain.swapChainImages[i], s_swapChain.swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        s_pData->swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->swapChainImages[i], s_pData->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 }
 
-void pkGraphicsSwapChain_Destroy(VkDevice device)
+/*static*/ void PkGraphicsSwapChain::CleanupGraphicsSwapChain()
 {
-    for (VkImageView imageView : s_swapChain.swapChainImageViews)
+    for (VkImageView imageView : s_pData->swapChainImageViews)
     {
-        vkDestroyImageView(device, imageView, nullptr);
+        vkDestroyImageView(PkGraphicsCore::GetDevice(), imageView, nullptr);
     }
 
-    vkDestroySwapchainKHR(device, s_swapChain.swapChain, nullptr);
+    vkDestroySwapchainKHR(PkGraphicsCore::GetDevice(), s_pData->swapChain, nullptr);
+
+    delete s_pData;
 }

@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <vector>
 
 #define MAX_FRAMES_IN_FLIGHT 2
 
@@ -47,7 +48,7 @@ void createSyncObjects()
     s_pData->imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     s_pData->renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
     s_pData->inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-    s_pData->imagesInFlight.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), VK_NULL_HANDLE);
+    s_pData->imagesInFlight.resize(PkGraphicsSwapChain::GetNumSwapChainImages(), VK_NULL_HANDLE);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -92,11 +93,11 @@ static void recreateSwapChain()
 
     {
         onSwapChainDestroy();
-        pkGraphicsSwapChain_Destroy(PkGraphicsCore::GetDevice());
+        PkGraphicsSwapChain::CleanupGraphicsSwapChain();
     }
 
     {
-        pkGraphicsSwapChain_Create(PkGraphicsCore::GetInstance(), PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetDevice(), PkGraphicsCore::GetMaxMsaaSampleCount());
+        PkGraphicsSwapChain::InitialiseGraphicsSwapChain();
         onSwapChainCreate();
     }
 }
@@ -111,7 +112,7 @@ static void recreateSwapChain()
     vkWaitForFences(PkGraphicsCore::GetDevice(), 1, &s_pData->inFlightFences[s_pData->currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
-    VkResult result = vkAcquireNextImageKHR(PkGraphicsCore::GetDevice(), pkGraphicsSwapChain_GetSwapChain().swapChain, UINT64_MAX, s_pData->imageAvailableSemaphores[s_pData->currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(PkGraphicsCore::GetDevice(), PkGraphicsSwapChain::GetSwapChain(), UINT64_MAX, s_pData->imageAvailableSemaphores[s_pData->currentFrame], VK_NULL_HANDLE, &imageIndex);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
@@ -160,7 +161,7 @@ static void recreateSwapChain()
     presentInfo.waitSemaphoreCount = 1;
     presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = { pkGraphicsSwapChain_GetSwapChain().swapChain };
+    VkSwapchainKHR swapChains[] = { PkGraphicsSwapChain::GetSwapChain() };
     presentInfo.swapchainCount = 1;
     presentInfo.pSwapchains = swapChains;
 
@@ -186,8 +187,7 @@ static void recreateSwapChain()
     s_pData = new PkGraphicsData();
 
     PkGraphicsCore::InitialiseGraphicsCore(pWindowName);
-
-    pkGraphicsSwapChain_Create(PkGraphicsCore::GetInstance(), PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetDevice(), PkGraphicsCore::GetMaxMsaaSampleCount());
+    PkGraphicsSwapChain::InitialiseGraphicsSwapChain();
 
     pkGraphicsRenderPassScene_Initialise(rModelViewProjection);
     pkGraphicsRenderPassImgui_Initialise();
@@ -204,8 +204,7 @@ static void recreateSwapChain()
     pkGraphicsRenderPassImgui_Cleanup();
     pkGraphicsRenderPassScene_Cleanup();
 
-    pkGraphicsSwapChain_Destroy(PkGraphicsCore::GetDevice());
-
+    PkGraphicsSwapChain::CleanupGraphicsSwapChain();
     PkGraphicsCore::CleanupGraphicsCore();
 
     delete s_pData;

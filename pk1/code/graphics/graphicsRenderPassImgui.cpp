@@ -32,11 +32,11 @@ static void check_vk_result(VkResult err)
 
 static void createCommandPools()
 {
-    s_commandPools.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
+    s_commandPools.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
     PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
-    for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
+    for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -96,7 +96,7 @@ static void destroyDescriptorPool()
 static void createRenderPass()
 {
     VkAttachmentDescription colorAttachment = {};
-    colorAttachment.format = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
+    colorAttachment.format = PkGraphicsSwapChain::GetSwapChainImageFormat();
     colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
     colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -144,13 +144,13 @@ static void destroyRenderPass()
 
 static void createFrameBuffers()
 {
-    s_frameBuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
+    s_frameBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
-    for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
+    for (uint32_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         std::array<VkImageView, 1> attachments =
         {
-            pkGraphicsSwapChain_GetSwapChain().swapChainImageViews[i],
+            PkGraphicsSwapChain::GetSwapChainImageView(i),
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -158,8 +158,8 @@ static void createFrameBuffers()
         framebufferInfo.renderPass = s_renderPass;
         framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
-        framebufferInfo.width = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
-        framebufferInfo.height = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
+        framebufferInfo.width = PkGraphicsSwapChain::GetSwapChainExtent().width;
+        framebufferInfo.height = PkGraphicsSwapChain::GetSwapChainExtent().height;
         framebufferInfo.layers = 1;
 
         if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &s_frameBuffers[i]) != VK_SUCCESS)
@@ -179,9 +179,9 @@ static void destroyFrameBuffers()
 
 static void createCommandBuffers()
 {
-    s_commandBuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
+    s_commandBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
-    for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
+    for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -198,7 +198,7 @@ static void createCommandBuffers()
 
 static void destroyCommandBuffers()
 {
-    for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
+    for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_commandPools[i], 1, &s_commandBuffers[i]);
     }
@@ -229,7 +229,7 @@ VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
     renderPassInfo.renderPass = s_renderPass;
     renderPassInfo.framebuffer = s_frameBuffers[imageIndex];
     renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
+    renderPassInfo.renderArea.extent = PkGraphicsSwapChain::GetSwapChainExtent();
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearValue;
 
@@ -308,7 +308,7 @@ void pkGraphicsRenderPassImgui_Initialise()
     init_info.DescriptorPool = s_descriptorPool;
     init_info.Allocator = nullptr;// PkGraphicsCore::GetAllocator()->GetAllocationCallbacks();
     init_info.MinImageCount = 2;
-    init_info.ImageCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+    init_info.ImageCount = PkGraphicsSwapChain::GetNumSwapChainImages();
     init_info.CheckVkResultFn = check_vk_result;
     ImGui_ImplVulkan_Init(&init_info, s_renderPass);
 

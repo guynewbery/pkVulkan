@@ -2,21 +2,18 @@
 
 #include <vulkan/vulkan_core.h>
 
-#include <vector>
-
-struct PkGraphicsSwapChain
+class PkGraphicsSwapChain
 {
-	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
-	std::vector<VkImage> swapChainImages;
-	std::vector<VkImageView> swapChainImageViews;
-	VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
-	VkExtent2D swapChainExtent{ 0,0 };
+public:
+	PkGraphicsSwapChain() = delete;
 
-	VkSurfaceFormatKHR surfaceFormat;
-	VkPresentModeKHR presentMode;
+	static VkSwapchainKHR GetSwapChain();
+	static VkExtent2D GetSwapChainExtent();
+
+	static uint32_t GetNumSwapChainImages();
+	static VkImageView GetSwapChainImageView(const uint32_t imageIndex);
+	static VkFormat GetSwapChainImageFormat();
+
+	static void InitialiseGraphicsSwapChain();
+	static void CleanupGraphicsSwapChain();
 };
-
-PkGraphicsSwapChain pkGraphicsSwapChain_GetSwapChain();
-
-void pkGraphicsSwapChain_Create(VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device, VkSampleCountFlagBits maxMsaaSampleCount);
-void pkGraphicsSwapChain_Destroy(VkDevice device);

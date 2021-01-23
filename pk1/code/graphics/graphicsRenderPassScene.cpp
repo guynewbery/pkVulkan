@@ -264,7 +264,7 @@ private:
     void createUniformBuffers()
     {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-        size_t bufferCount = pkGraphicsSwapChain_GetSwapChain().swapChainImages.size();
+        size_t bufferCount = PkGraphicsSwapChain::GetNumSwapChainImages();
 
         uniformBuffers.resize(bufferCount);
         uniformBufferAllocations.resize(bufferCount);
@@ -284,7 +284,7 @@ private:
 
     void destroyUniformBuffers()
     {
-        size_t bufferCount = pkGraphicsSwapChain_GetSwapChain().swapChainImages.size();
+        size_t bufferCount = PkGraphicsSwapChain::GetNumSwapChainImages();
 
         for (size_t i = 0; i < bufferCount; i++)
         {
@@ -296,11 +296,11 @@ private:
     {
         createImage
         (
-            pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width, 
-            pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height,
+            PkGraphicsSwapChain::GetSwapChainExtent().width,
+            PkGraphicsSwapChain::GetSwapChainExtent().height,
             1,
             PkGraphicsCore::GetMaxMsaaSampleCount(),
-            pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat,
+            PkGraphicsSwapChain::GetSwapChainImageFormat(),
             VK_IMAGE_ASPECT_COLOR_BIT,
             VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -321,8 +321,8 @@ private:
     {
         createImage
         (
-            pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width,
-            pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height,
+            PkGraphicsSwapChain::GetSwapChainExtent().width,
+            PkGraphicsSwapChain::GetSwapChainExtent().height,
             1,
             PkGraphicsCore::GetMaxMsaaSampleCount(), 
             findDepthFormat(), 
@@ -346,15 +346,15 @@ private:
     {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        poolSizes[0].descriptorCount = PkGraphicsSwapChain::GetNumSwapChainImages();
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        poolSizes[1].descriptorCount = PkGraphicsSwapChain::GetNumSwapChainImages();
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        poolInfo.maxSets = PkGraphicsSwapChain::GetNumSwapChainImages();
 
         if (vkCreateDescriptorPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS)
         {
@@ -365,7 +365,7 @@ private:
     void createRenderPass() 
     {
         VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
+        colorAttachment.format = PkGraphicsSwapChain::GetSwapChainImageFormat();
         colorAttachment.samples = PkGraphicsCore::GetMaxMsaaSampleCount();
         colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -385,7 +385,7 @@ private:
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription colorAttachmentResolve{};
-        colorAttachmentResolve.format = pkGraphicsSwapChain_GetSwapChain().swapChainImageFormat;
+        colorAttachmentResolve.format = PkGraphicsSwapChain::GetSwapChainImageFormat();
         colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
         colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -478,14 +478,14 @@ private:
         VkViewport viewport{};
         viewport.x = 0.0f;
         viewport.y = 0.0f;
-        viewport.width = (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
-        viewport.height = (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
+        viewport.width = (float)PkGraphicsSwapChain::GetSwapChainExtent().width;
+        viewport.height = (float)PkGraphicsSwapChain::GetSwapChainExtent().height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
 
         VkRect2D scissor{};
         scissor.offset = { 0, 0 };
-        scissor.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
+        scissor.extent = PkGraphicsSwapChain::GetSwapChainExtent();
 
         VkPipelineViewportStateCreateInfo viewportState{};
         viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -569,15 +569,15 @@ private:
 
     void createFramebuffers() 
     {
-        m_swapChainFramebuffers.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size());
+        m_swapChainFramebuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
-        for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImageViews.size(); i++)
+        for (uint32_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
         {
             std::array<VkImageView, 3> attachments = 
             {
                 colorImageView,
                 depthImageView,
-                pkGraphicsSwapChain_GetSwapChain().swapChainImageViews[i]
+                PkGraphicsSwapChain::GetSwapChainImageView(i)
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
@@ -585,8 +585,8 @@ private:
             framebufferInfo.renderPass = m_renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width;
-            framebufferInfo.height = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
+            framebufferInfo.width = PkGraphicsSwapChain::GetSwapChainExtent().width;
+            framebufferInfo.height = PkGraphicsSwapChain::GetSwapChainExtent().height;
             framebufferInfo.layers = 1;
 
             if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS)
@@ -1089,20 +1089,20 @@ private:
 
     void createDescriptorSets() 
     {
-        std::vector<VkDescriptorSetLayout> layouts(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(), m_descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(PkGraphicsSwapChain::GetNumSwapChainImages(), m_descriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = m_descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        allocInfo.descriptorSetCount = PkGraphicsSwapChain::GetNumSwapChainImages();
         allocInfo.pSetLayouts = layouts.data();
 
-        m_descriptorSets.resize(pkGraphicsSwapChain_GetSwapChain().swapChainImages.size());
+        m_descriptorSets.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
         if (vkAllocateDescriptorSets(PkGraphicsCore::GetDevice(), &allocInfo, m_descriptorSets.data()) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        for (size_t i = 0; i < pkGraphicsSwapChain_GetSwapChain().swapChainImages.size(); i++)
+        for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
         {
             VkDescriptorBufferInfo bufferInfo{};
             bufferInfo.buffer = uniformBuffers[i];
@@ -1192,7 +1192,7 @@ private:
             renderPassInfo.renderPass = m_renderPass;
             renderPassInfo.framebuffer = m_swapChainFramebuffers[i];
             renderPassInfo.renderArea.offset = { 0, 0 };
-            renderPassInfo.renderArea.extent = pkGraphicsSwapChain_GetSwapChain().swapChainExtent;
+            renderPassInfo.renderArea.extent = PkGraphicsSwapChain::GetSwapChainExtent();
 
             std::array<VkClearValue, 2> clearValues{};
             clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -1266,7 +1266,7 @@ private:
     void updateUniformBuffer(uint32_t currentImage)
     {
         float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
-        float aspectRatio = pkGraphicsSwapChain_GetSwapChain().swapChainExtent.width / (float)pkGraphicsSwapChain_GetSwapChain().swapChainExtent.height;
+        float aspectRatio = PkGraphicsSwapChain::GetSwapChainExtent().width / (float)PkGraphicsSwapChain::GetSwapChainExtent().height;
         float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
         float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
 
