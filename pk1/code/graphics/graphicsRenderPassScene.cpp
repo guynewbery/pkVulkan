@@ -1308,6 +1308,6 @@ void pkGraphicsRenderPassScene_Initialise(PkGraphicsModelViewProjection& rModelV
 
 void pkGraphicsRenderPassScene_Cleanup()
 {
-    delete(s_pGraphicsRenderPassScene);
+    delete s_pGraphicsRenderPassScene;
     s_pGraphicsModelViewProjection = nullptr;
 }
