@@ -27,12 +27,12 @@ static PkGraphicsData* s_pData = nullptr;
 static void onSwapChainCreate()
 {
     PkGraphicsRenderPassScene::OnSwapChainCreate();
-    pkGraphicsRenderPassImgui_OnSwapChainCreate();
+    PkGraphicsRenderPassImgui::OnSwapChainCreate();
 }
 
 static void onSwapChainDestroy()
 {
-    pkGraphicsRenderPassImgui_OnSwapChainDestroy();
+    PkGraphicsRenderPassImgui::OnSwapChainDestroy();
     PkGraphicsRenderPassScene::OnSwapChainDestroy();
 }
 
@@ -40,7 +40,7 @@ static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>&
 {
     buffers.resize(2);
     buffers[0] = PkGraphicsRenderPassScene::GetCommandBuffer(imageIndex);
-    buffers[1] = pkGraphicsRenderPassImgui_GetCommandBuffer(imageIndex);
+    buffers[1] = PkGraphicsRenderPassImgui::GetCommandBuffer(imageIndex);
 }
 
 void createSyncObjects()
@@ -184,12 +184,12 @@ static void recreateSwapChain()
 
 /*static*/ void PkGraphics::BeginImguiFrame()
 {
-    pkGraphicsRenderPassImgui_BeginFrame();
+    PkGraphicsRenderPassImgui::BeginImguiFrame();
 }
 
 /*static*/ void PkGraphics::EndImguiFrame()
 {
-    pkGraphicsRenderPassImgui_EndFrame();
+    PkGraphicsRenderPassImgui::EndImguiFrame();
 }
 
 /*static*/ void PkGraphics::SetViewMatrix(const glm::mat4& rMat)
@@ -210,7 +210,7 @@ static void recreateSwapChain()
     PkGraphicsSwapChain::InitialiseGraphicsSwapChain();
 
     PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene();
-    pkGraphicsRenderPassImgui_Initialise();
+    PkGraphicsRenderPassImgui::InitialiseGraphicsRenderPassImgui();
 
     createSyncObjects();
 }
@@ -221,7 +221,7 @@ static void recreateSwapChain()
 
     destroySyncObjects();
 
-    pkGraphicsRenderPassImgui_Cleanup();
+    PkGraphicsRenderPassImgui::CleanupGraphicsRenderPassImgui();
     PkGraphicsRenderPassScene::CleanupGraphicsRenderPassScene();
 
     PkGraphicsSwapChain::CleanupGraphicsSwapChain();

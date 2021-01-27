@@ -11,13 +11,18 @@
 #include <iostream>
 #include <array>
 
-std::vector<VkCommandPool> s_commandPools;
+struct PkGraphicsRenderPassImguiData
+{
+    std::vector<VkCommandPool> commandPools;
 
-VkDescriptorPool s_descriptorPool;
-VkRenderPass s_renderPass;
+    VkDescriptorPool descriptorPool;
+    VkRenderPass renderPass;
 
-std::vector<VkFramebuffer> s_frameBuffers;
-std::vector<VkCommandBuffer> s_commandBuffers;
+    std::vector<VkFramebuffer> frameBuffers;
+    std::vector<VkCommandBuffer> commandBuffers;
+};
+
+static PkGraphicsRenderPassImguiData* s_pData = nullptr;
 
 static void check_vk_result(VkResult err)
 {
@@ -30,9 +35,9 @@ static void check_vk_result(VkResult err)
 */
 }
 
-static void createCommandPools()
+static void createCommandPools(PkGraphicsRenderPassImguiData& rData)
 {
-    s_commandPools.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
+    rData.commandPools.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
     PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
@@ -43,22 +48,22 @@ static void createCommandPools()
         poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
         poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-        if (vkCreateCommandPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_commandPools[i]) != VK_SUCCESS)
+        if (vkCreateCommandPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &rData.commandPools[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create graphics command pool!");
         }
     }
 }
 
-static void destroyCommandPools()
+static void destroyCommandPools(PkGraphicsRenderPassImguiData& rData)
 {
-    for (VkCommandPool commandPool : s_commandPools)
+    for (VkCommandPool commandPool : rData.commandPools)
     {
         vkDestroyCommandPool(PkGraphicsCore::GetDevice(), commandPool, nullptr);
     }
 }
 
-static void createDescriptorPool()
+static void createDescriptorPool(PkGraphicsRenderPassImguiData& rData)
 {
     VkDescriptorPoolSize poolSizes[] =
     {
@@ -82,18 +87,18 @@ static void createDescriptorPool()
     poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
     poolInfo.pPoolSizes = poolSizes;
 
-    if (vkCreateDescriptorPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_descriptorPool) != VK_SUCCESS)
+    if (vkCreateDescriptorPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &rData.descriptorPool) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor pool!");
     }
 }
 
-static void destroyDescriptorPool()
+static void destroyDescriptorPool(PkGraphicsRenderPassImguiData& rData)
 {
-    vkDestroyDescriptorPool(PkGraphicsCore::GetDevice(), s_descriptorPool, nullptr);
+    vkDestroyDescriptorPool(PkGraphicsCore::GetDevice(), rData.descriptorPool, nullptr);
 }
 
-static void createRenderPass()
+static void createRenderPass(PkGraphicsRenderPassImguiData& rData)
 {
     VkAttachmentDescription colorAttachment = {};
     colorAttachment.format = PkGraphicsSwapChain::GetSwapChainImageFormat();
@@ -131,20 +136,20 @@ static void createRenderPass()
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &s_renderPass) != VK_SUCCESS)
+    if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &rData.renderPass) != VK_SUCCESS)
     {
         throw std::runtime_error("Could not create Dear ImGui's render pass");
     }
 }
 
-static void destroyRenderPass()
+static void destroyRenderPass(PkGraphicsRenderPassImguiData& rData)
 {
-    vkDestroyRenderPass(PkGraphicsCore::GetDevice(), s_renderPass, nullptr);
+    vkDestroyRenderPass(PkGraphicsCore::GetDevice(), rData.renderPass, nullptr);
 }
 
-static void createFrameBuffers()
+static void createFrameBuffers(PkGraphicsRenderPassImguiData& rData)
 {
-    s_frameBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
+    rData.frameBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
     for (uint32_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
@@ -155,60 +160,60 @@ static void createFrameBuffers()
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = s_renderPass;
+        framebufferInfo.renderPass = rData.renderPass;
         framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = PkGraphicsSwapChain::GetSwapChainExtent().width;
         framebufferInfo.height = PkGraphicsSwapChain::GetSwapChainExtent().height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &s_frameBuffers[i]) != VK_SUCCESS)
+        if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &rData.frameBuffers[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
 }
 
-static void destroyFrameBuffers()
+static void destroyFrameBuffers(PkGraphicsRenderPassImguiData& rData)
 {
-    for (VkFramebuffer framebuffer : s_frameBuffers)
+    for (VkFramebuffer framebuffer : rData.frameBuffers)
     {
         vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
     }
 }
 
-static void createCommandBuffers()
+static void createCommandBuffers(PkGraphicsRenderPassImguiData& rData)
 {
-    s_commandBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
+    rData.commandBuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
     for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = s_commandPools[i];
+        allocInfo.commandPool = rData.commandPools[i];
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = 1;
 
-        if (vkAllocateCommandBuffers(PkGraphicsCore::GetDevice(), &allocInfo, &s_commandBuffers[i]) != VK_SUCCESS)
+        if (vkAllocateCommandBuffers(PkGraphicsCore::GetDevice(), &allocInfo, &rData.commandBuffers[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to allocate command buffers!");
         }
     }
 }
 
-static void destroyCommandBuffers()
+static void destroyCommandBuffers(PkGraphicsRenderPassImguiData& rData)
 {
     for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
-        vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_commandPools[i], 1, &s_commandBuffers[i]);
+        vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), rData.commandPools[i], 1, &rData.commandBuffers[i]);
     }
 }
 
-VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
+/*static*/ VkCommandBuffer& PkGraphicsRenderPassImgui::GetCommandBuffer(uint32_t imageIndex)
 {
     ImDrawData* pDrawData = ImGui::GetDrawData();
 
-    if (vkResetCommandPool(PkGraphicsCore::GetDevice(), s_commandPools[imageIndex], 0) != VK_SUCCESS)
+    if (vkResetCommandPool(PkGraphicsCore::GetDevice(), s_pData->commandPools[imageIndex], 0) != VK_SUCCESS)
     {
         throw std::runtime_error("vkResetCommandPool error");
     }
@@ -217,7 +222,7 @@ VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
     commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     commandBufferBeginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-    if (vkBeginCommandBuffer(s_commandBuffers[imageIndex], &commandBufferBeginInfo) != VK_SUCCESS)
+    if (vkBeginCommandBuffer(s_pData->commandBuffers[imageIndex], &commandBufferBeginInfo) != VK_SUCCESS)
     {
         throw std::runtime_error("commandBufferBeginInfo error");
     }
@@ -226,58 +231,60 @@ VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex)
 
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = s_renderPass;
-    renderPassInfo.framebuffer = s_frameBuffers[imageIndex];
+    renderPassInfo.renderPass = s_pData->renderPass;
+    renderPassInfo.framebuffer = s_pData->frameBuffers[imageIndex];
     renderPassInfo.renderArea.offset = { 0, 0 };
     renderPassInfo.renderArea.extent = PkGraphicsSwapChain::GetSwapChainExtent();
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearValue;
 
-    vkCmdBeginRenderPass(s_commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(s_pData->commandBuffers[imageIndex], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     // Record dear imgui primitives into command buffer
-    ImGui_ImplVulkan_RenderDrawData(pDrawData, s_commandBuffers[imageIndex]);
+    ImGui_ImplVulkan_RenderDrawData(pDrawData, s_pData->commandBuffers[imageIndex]);
 
     // Submit command buffer
-    vkCmdEndRenderPass(s_commandBuffers[imageIndex]);
+    vkCmdEndRenderPass(s_pData->commandBuffers[imageIndex]);
 
-    if (vkEndCommandBuffer(s_commandBuffers[imageIndex]) != VK_SUCCESS)
+    if (vkEndCommandBuffer(s_pData->commandBuffers[imageIndex]) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to record command buffer!");
     }
 
 
-    return s_commandBuffers[imageIndex];
+    return s_pData->commandBuffers[imageIndex];
 }
 
-void pkGraphicsRenderPassImgui_BeginFrame()
+/*static*/ void PkGraphicsRenderPassImgui::BeginImguiFrame()
 {
     ImGui_ImplVulkan_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
 
-void pkGraphicsRenderPassImgui_EndFrame()
+/*static*/ void PkGraphicsRenderPassImgui::EndImguiFrame()
 {
     ImGui::Render();
 }
 
-void pkGraphicsRenderPassImgui_OnSwapChainCreate()
+/*static*/ void PkGraphicsRenderPassImgui::OnSwapChainCreate()
 {
-    createRenderPass();
-    createFrameBuffers();
-    createCommandBuffers();
+    createRenderPass(*s_pData);
+    createFrameBuffers(*s_pData);
+    createCommandBuffers(*s_pData);
 }
 
-void pkGraphicsRenderPassImgui_OnSwapChainDestroy()
+/*static*/ void PkGraphicsRenderPassImgui::OnSwapChainDestroy()
 {
-    destroyCommandBuffers();
-    destroyFrameBuffers();
-    destroyRenderPass();
+    destroyCommandBuffers(*s_pData);
+    destroyFrameBuffers(*s_pData);
+    destroyRenderPass(*s_pData);
 }
 
-void pkGraphicsRenderPassImgui_Initialise()
+/*static*/ void PkGraphicsRenderPassImgui::InitialiseGraphicsRenderPassImgui()
 {
+    s_pData = new PkGraphicsRenderPassImguiData();
+
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -291,10 +298,10 @@ void pkGraphicsRenderPassImgui_Initialise()
 
     PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
-    createCommandPools();
-    createDescriptorPool();
+    createCommandPools(*s_pData);
+    createDescriptorPool(*s_pData);
 
-    pkGraphicsRenderPassImgui_OnSwapChainCreate();
+    OnSwapChainCreate();
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(PkGraphicsCore::GetWindow(), true);
@@ -305,13 +312,12 @@ void pkGraphicsRenderPassImgui_Initialise()
     init_info.QueueFamily = indices.graphicsFamily.value();
     init_info.Queue = PkGraphicsCore::GetGraphicsQueue();
     init_info.PipelineCache = VK_NULL_HANDLE;
-    init_info.DescriptorPool = s_descriptorPool;
+    init_info.DescriptorPool = s_pData->descriptorPool;
     init_info.Allocator = nullptr;// PkGraphicsCore::GetAllocator()->GetAllocationCallbacks();
     init_info.MinImageCount = 2;
     init_info.ImageCount = PkGraphicsSwapChain::GetNumSwapChainImages();
     init_info.CheckVkResultFn = check_vk_result;
-    ImGui_ImplVulkan_Init(&init_info, s_renderPass);
-
+    ImGui_ImplVulkan_Init(&init_info, s_pData->renderPass);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -330,22 +336,24 @@ void pkGraphicsRenderPassImgui_Initialise()
 
     // Upload Fonts
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPools[0]);
+        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_pData->commandPools[0]);
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPools[0], commandBuffer);
+        pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_pData->commandPools[0], commandBuffer);
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }
 }
 
-void pkGraphicsRenderPassImgui_Cleanup()
+/*static*/ void PkGraphicsRenderPassImgui::CleanupGraphicsRenderPassImgui()
 {
-    pkGraphicsRenderPassImgui_OnSwapChainDestroy();
+    OnSwapChainDestroy();
 
-    destroyDescriptorPool();
-    destroyCommandPools();
+    destroyDescriptorPool(*s_pData);
+    destroyCommandPools(*s_pData);
 
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+
+    delete s_pData;
 }

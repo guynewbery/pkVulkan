@@ -4,13 +4,19 @@
 
 #include <stdint.h>
 
-VkCommandBuffer& pkGraphicsRenderPassImgui_GetCommandBuffer(uint32_t imageIndex);
+class PkGraphicsRenderPassImgui
+{
+public:
+	PkGraphicsRenderPassImgui() = delete;
 
-void pkGraphicsRenderPassImgui_BeginFrame();
-void pkGraphicsRenderPassImgui_EndFrame();
+	static VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex);
 
-void pkGraphicsRenderPassImgui_OnSwapChainCreate();
-void pkGraphicsRenderPassImgui_OnSwapChainDestroy();
+	static void BeginImguiFrame();
+	static void EndImguiFrame();
 
-void pkGraphicsRenderPassImgui_Initialise();
-void pkGraphicsRenderPassImgui_Cleanup();
+	static void OnSwapChainCreate();
+	static void OnSwapChainDestroy();
+
+	static void InitialiseGraphicsRenderPassImgui();
+	static void CleanupGraphicsRenderPassImgui();
+};
