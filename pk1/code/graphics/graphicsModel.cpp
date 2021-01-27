@@ -41,6 +41,8 @@ struct PkGraphicsModelData
     std::string modelPath;
     std::string texturePath;
 
+    glm::mat4 matrix = glm::mat4(1.0f);
+
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VmaAllocation> uniformBufferAllocations;
     VkDescriptorPool descriptorPool;
@@ -746,7 +748,7 @@ void updateUniformBuffer(PkGraphicsModelData& rData, const uint32_t imageIndex)
     float farViewPlane = PkGraphicsCore::GetFarViewPlane();
 
     UniformBufferObject ubo{};
-    ubo.model = glm::mat4(1.0f);
+    ubo.model = rData.matrix;
     ubo.view = PkGraphicsCore::GetViewMatrix();
     ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
     ubo.proj[1][1] *= -1;
@@ -761,6 +763,11 @@ VkCommandBuffer& PkGraphicsModel::GetCommandBuffer(const uint32_t imageIndex)
 {
     updateUniformBuffer(*m_pData, imageIndex);
     return m_pData->commandBuffers[imageIndex];
+}
+
+void PkGraphicsModel::SetMatrix(glm::mat4& rMat)
+{
+    m_pData->matrix = rMat;
 }
 
 void PkGraphicsModel::OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers)

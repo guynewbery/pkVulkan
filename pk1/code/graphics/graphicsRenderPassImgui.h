@@ -9,7 +9,7 @@ class PkGraphicsRenderPassImgui
 public:
 	PkGraphicsRenderPassImgui() = delete;
 
-	static VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex);
+	static VkCommandBuffer& GetCommandBuffer(const uint32_t imageIndex);
 
 	static void BeginImguiFrame();
 	static void EndImguiFrame();

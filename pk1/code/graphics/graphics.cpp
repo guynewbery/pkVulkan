@@ -38,9 +38,17 @@ static void onSwapChainDestroy()
 
 static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
-    buffers.resize(2);
-    buffers[0] = PkGraphicsRenderPassScene::GetCommandBuffer(imageIndex);
-    buffers[1] = PkGraphicsRenderPassImgui::GetCommandBuffer(imageIndex);
+    uint32_t numSceneCommandBuffers = PkGraphicsRenderPassScene::GetNumCommandBuffers();
+    uint32_t numImguiCommandBuffers = 1;
+    buffers.resize(numSceneCommandBuffers + numImguiCommandBuffers);
+
+    uint32_t i = 0;
+    for (i; i < numSceneCommandBuffers; ++i)
+    {
+        buffers[i] = PkGraphicsRenderPassScene::GetCommandBuffer(i, imageIndex);
+    }
+
+    buffers[i] = PkGraphicsRenderPassImgui::GetCommandBuffer(imageIndex);
 }
 
 void createSyncObjects()

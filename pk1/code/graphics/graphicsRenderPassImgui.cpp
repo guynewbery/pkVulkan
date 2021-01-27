@@ -209,7 +209,7 @@ static void destroyCommandBuffers(PkGraphicsRenderPassImguiData& rData)
     }
 }
 
-/*static*/ VkCommandBuffer& PkGraphicsRenderPassImgui::GetCommandBuffer(uint32_t imageIndex)
+/*static*/ VkCommandBuffer& PkGraphicsRenderPassImgui::GetCommandBuffer(const uint32_t imageIndex)
 {
     ImDrawData* pDrawData = ImGui::GetDrawData();
 

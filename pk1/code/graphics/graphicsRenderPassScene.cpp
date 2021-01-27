@@ -6,6 +6,7 @@
 #include "graphics/graphicsUtils.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -27,7 +28,7 @@ struct PkGrapicsRenderPassSceneData
     VkImageView depthImageView;
     VmaAllocation depthImageAllocation;
 
-    PkGraphicsModel* pModel = nullptr;
+    std::vector<PkGraphicsModel*> pModels;
 };
 
 static PkGrapicsRenderPassSceneData* s_pData = nullptr;
@@ -448,9 +449,14 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
     }
 }
 
-/*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(uint32_t imageIndex)
+/*static*/ uint32_t PkGraphicsRenderPassScene::GetNumCommandBuffers()
 {
-    return s_pData->pModel->GetCommandBuffer(imageIndex);
+    return s_pData->pModels.size();
+}
+
+/*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(const uint32_t modelIndex, const uint32_t imageIndex)
+{
+    return s_pData->pModels[modelIndex]->GetCommandBuffer(imageIndex);
 }
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
@@ -461,19 +467,25 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
     createPipeline(*s_pData);
     createFramebuffers(*s_pData);
 
-    s_pData->pModel->OnSwapChainCreate
-    (
-        s_pData->descriptorSetLayout, 
-        s_pData->renderPass, 
-        s_pData->pipelineLayout, 
-        s_pData->pipeline, 
-        s_pData->framebuffers
-    );
+    for (PkGraphicsModel* pModel : s_pData->pModels)
+    {
+        pModel->OnSwapChainCreate
+        (
+            s_pData->descriptorSetLayout,
+            s_pData->renderPass,
+            s_pData->pipelineLayout,
+            s_pData->pipeline,
+            s_pData->framebuffers
+        );
+    }
 }
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainDestroy()
 {
-    s_pData->pModel->OnSwapChainDestroy();
+    for (PkGraphicsModel* pModel : s_pData->pModels)
+    {
+        pModel->OnSwapChainDestroy();
+    }
 
     destroyFramebuffers(*s_pData);
     destroyPipeline(*s_pData);
@@ -487,7 +499,15 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
     s_pData = new PkGrapicsRenderPassSceneData();
     createDescriptorSetLayout(*s_pData);
 
-    s_pData->pModel = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+    s_pData->pModels.resize(2);
+
+    s_pData->pModels[0] = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+    glm::mat4 m0 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    s_pData->pModels[0]->SetMatrix(m0);
+
+    s_pData->pModels[1] = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+    glm::mat4 m1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    s_pData->pModels[1]->SetMatrix(m1);
 
     OnSwapChainCreate();
 }
@@ -496,7 +516,10 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
 {
     OnSwapChainDestroy();
 
-    delete s_pData->pModel;
+    for (uint32_t i = 0; i < s_pData->pModels.size(); ++i)
+    {
+        delete s_pData->pModels[i];
+    }
 
     vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), s_pData->descriptorSetLayout, nullptr);
     delete s_pData;

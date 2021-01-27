@@ -9,7 +9,8 @@ class PkGraphicsRenderPassScene
 public:
 	PkGraphicsRenderPassScene() = delete;
 
-	static VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex);
+	static uint32_t GetNumCommandBuffers();
+	static VkCommandBuffer& GetCommandBuffer(const uint32_t modelIndex, const uint32_t imageIndex);
 
 	static void OnSwapChainCreate();
 	static void OnSwapChainDestroy();
