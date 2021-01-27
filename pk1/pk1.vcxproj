@@ -22,6 +22,7 @@
     <ClCompile Include="code\camera\camera.cpp" />
     <ClCompile Include="code\game.cpp" />
     <ClCompile Include="code\graphics\graphics.cpp" />
+    <ClCompile Include="code\graphics\graphicsModel.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassImgui.cpp" />
     <ClCompile Include="code\graphics\graphicsRenderPassScene.cpp" />
     <ClCompile Include="code\graphics\graphicsCore.cpp" />
@@ -40,6 +41,7 @@
     <ClInclude Include="code\camera\camera.h" />
     <ClInclude Include="code\game.h" />
     <ClInclude Include="code\graphics\graphics.h" />
+    <ClInclude Include="code\graphics\graphicsModel.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassImgui.h" />
     <ClInclude Include="code\graphics\graphicsRenderPassScene.h" />
     <ClInclude Include="code\graphics\graphicsCore.h" />

@@ -5,15 +5,7 @@
 
 #include <stdint.h>
 
-struct PkGraphicsModelViewProjection
-{
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-
-    float fieldOfView = 45.0f;
-    float nearViewPlane = 0.1f;
-    float farViewPlane = 100.0f;
-};
+struct PkGraphicsModelViewProjection;
 
 VkCommandBuffer& pkGraphicsRenderPassScene_GetCommandBuffer(uint32_t imageIndex);
 

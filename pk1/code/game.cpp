@@ -5,6 +5,7 @@
 #include "graphics/graphics.h"
 #include "graphics/graphicsRenderPassImgui.h"
 #include "graphics/graphicsRenderPassScene.h"
+#include "graphics/graphicsModel.h"
 #include "camera/camera.h"
 #include "imgui/imgui.h"
 

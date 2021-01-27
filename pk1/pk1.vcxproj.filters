@@ -63,6 +63,9 @@
     <ClCompile Include="code\graphics\graphicsCore.cpp">
       <Filter>code\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="code\graphics\graphicsModel.cpp">
+      <Filter>code\graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="code\library_macros.h">
@@ -114,6 +117,9 @@
       <Filter>code\graphics</Filter>
     </ClInclude>
     <ClInclude Include="code\graphics\graphicsCore.h">
+      <Filter>code\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="code\graphics\graphicsModel.h">
       <Filter>code\graphics</Filter>
     </ClInclude>
   </ItemGroup>
