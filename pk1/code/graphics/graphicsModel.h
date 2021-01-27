@@ -41,7 +41,8 @@ static std::array<VkVertexInputBindingDescription, 2> getBindingDescriptions()
     return bindingDescriptions;
 }
 
-static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions() {
+static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions() 
+{
     std::array<VkVertexInputAttributeDescription, 5> attributeDescriptions{};
 
     attributeDescriptions[0].binding = 0;
