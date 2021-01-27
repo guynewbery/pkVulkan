@@ -38,8 +38,8 @@ struct UniformBufferObject
 
 struct PkGraphicsModelData
 {
-    std::string modelPath = "data/models/viking_room.obj";
-    std::string texturePath = "data/textures/viking_room.png";
+    std::string modelPath;
+    std::string texturePath;
 
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VmaAllocation> uniformBufferAllocations;
