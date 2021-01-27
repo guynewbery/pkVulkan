@@ -10,59 +10,9 @@
 #include <iostream>
 #include <fstream>
 
-static PkGraphicsModel* s_pModel;
 
-class PkGrapicsRenderPassScene 
+struct PkGrapicsRenderPassSceneData 
 {
-public:
-    PkGrapicsRenderPassScene()
-    {
-        createDescriptorSetLayout();
-
-        OnSwapChainCreate();
-    }
-
-    ~PkGrapicsRenderPassScene()
-    {
-        OnSwapChainDestroy();
-
-        vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), m_descriptorSetLayout, nullptr);
-    }
-
-    void OnSwapChainCreate()
-    {
-        createColourResources();
-        createDepthResources();
-        createRenderPass();
-        createGraphicsPipeline();
-        createFramebuffers();
-
-        s_pModel->OnSwapChainCreate(m_descriptorSetLayout, m_renderPass, m_pipelineLayout, m_pipeline, m_framebuffers);
-    }
-
-    void OnSwapChainDestroy()
-    {
-        s_pModel->OnSwapChainDestroy();
-
-        for (VkFramebuffer framebuffer : m_framebuffers)
-        {
-            vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
-        }
-
-        vkDestroyPipeline(PkGraphicsCore::GetDevice(), m_pipeline, nullptr);
-        vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), m_pipelineLayout, nullptr);
-        vkDestroyRenderPass(PkGraphicsCore::GetDevice(), m_renderPass, nullptr);
-
-        destroyDepthResources();
-        destroyColourResources();
-    }
-
-    VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex)
-    {
-        return s_pModel->GetCommandBuffer(imageIndex);
-    }
-
-private:
     VkDescriptorSetLayout m_descriptorSetLayout;
 
     VkRenderPass m_renderPass;
@@ -77,6 +27,42 @@ private:
     VkImage depthImage;
     VkImageView depthImageView;
     VmaAllocation depthImageAllocation;
+
+    PkGraphicsModel* pModel = nullptr;
+
+    PkGrapicsRenderPassSceneData()
+    {
+        createDescriptorSetLayout();
+    }
+
+    ~PkGrapicsRenderPassSceneData()
+    {
+        vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), m_descriptorSetLayout, nullptr);
+    }
+
+    void OnSwapChainCreate()
+    {
+        createColourResources();
+        createDepthResources();
+        createRenderPass();
+        createGraphicsPipeline();
+        createFramebuffers();
+    }
+
+    void OnSwapChainDestroy()
+    {
+        for (VkFramebuffer framebuffer : m_framebuffers)
+        {
+            vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
+        }
+
+        vkDestroyPipeline(PkGraphicsCore::GetDevice(), m_pipeline, nullptr);
+        vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), m_pipelineLayout, nullptr);
+        vkDestroyRenderPass(PkGraphicsCore::GetDevice(), m_renderPass, nullptr);
+
+        destroyDepthResources();
+        destroyColourResources();
+    }
 
     void createDescriptorSetLayout()
     {
@@ -481,31 +467,46 @@ private:
     }
 };
 
-static PkGrapicsRenderPassScene* s_pGraphicsRenderPassScene = nullptr;
+static PkGrapicsRenderPassSceneData* s_pData = nullptr;
 
-VkCommandBuffer& pkGraphicsRenderPassScene_GetCommandBuffer(uint32_t imageIndex)
+/*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(uint32_t imageIndex)
 {
-    return s_pGraphicsRenderPassScene->GetCommandBuffer(imageIndex);
+    return s_pData->pModel->GetCommandBuffer(imageIndex);
 }
 
-void pkGraphicsRenderPassScene_OnSwapChainCreate()
+/*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
 {
-    s_pGraphicsRenderPassScene->OnSwapChainCreate();
+    s_pData->OnSwapChainCreate();
+
+    s_pData->pModel->OnSwapChainCreate
+    (
+        s_pData->m_descriptorSetLayout, 
+        s_pData->m_renderPass, 
+        s_pData->m_pipelineLayout, 
+        s_pData->m_pipeline, 
+        s_pData->m_framebuffers
+    );
 }
 
-void pkGraphicsRenderPassScene_OnSwapChainDestroy()
+/*static*/ void PkGraphicsRenderPassScene::OnSwapChainDestroy()
 {
-    s_pGraphicsRenderPassScene->OnSwapChainDestroy();
+    s_pData->pModel->OnSwapChainDestroy();
+
+    s_pData->OnSwapChainDestroy();
 }
 
-void pkGraphicsRenderPassScene_Initialise()
+/*static*/ void PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene()
 {
-    s_pModel = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
-    s_pGraphicsRenderPassScene = new PkGrapicsRenderPassScene();
+    s_pData = new PkGrapicsRenderPassSceneData();
+    s_pData->pModel = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+
+    OnSwapChainCreate();
 }
 
-void pkGraphicsRenderPassScene_Cleanup()
+/*static*/ void PkGraphicsRenderPassScene::CleanupGraphicsRenderPassScene()
 {
-    delete s_pGraphicsRenderPassScene;
-    delete s_pModel;
+    OnSwapChainDestroy();
+
+    delete s_pData->pModel;
+    delete s_pData;
 }

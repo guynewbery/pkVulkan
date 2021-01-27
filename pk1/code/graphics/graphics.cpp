@@ -26,20 +26,20 @@ static PkGraphicsData* s_pData = nullptr;
 
 static void onSwapChainCreate()
 {
-    pkGraphicsRenderPassScene_OnSwapChainCreate();
+    PkGraphicsRenderPassScene::OnSwapChainCreate();
     pkGraphicsRenderPassImgui_OnSwapChainCreate();
 }
 
 static void onSwapChainDestroy()
 {
     pkGraphicsRenderPassImgui_OnSwapChainDestroy();
-    pkGraphicsRenderPassScene_OnSwapChainDestroy();
+    PkGraphicsRenderPassScene::OnSwapChainDestroy();
 }
 
 static void getCommandBuffers(uint32_t imageIndex, std::vector<VkCommandBuffer>& buffers)
 {
     buffers.resize(2);
-    buffers[0] = pkGraphicsRenderPassScene_GetCommandBuffer(imageIndex);
+    buffers[0] = PkGraphicsRenderPassScene::GetCommandBuffer(imageIndex);
     buffers[1] = pkGraphicsRenderPassImgui_GetCommandBuffer(imageIndex);
 }
 
@@ -209,7 +209,7 @@ static void recreateSwapChain()
     PkGraphicsCore::InitialiseGraphicsCore(pWindowName);
     PkGraphicsSwapChain::InitialiseGraphicsSwapChain();
 
-    pkGraphicsRenderPassScene_Initialise();
+    PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene();
     pkGraphicsRenderPassImgui_Initialise();
 
     createSyncObjects();
@@ -222,7 +222,7 @@ static void recreateSwapChain()
     destroySyncObjects();
 
     pkGraphicsRenderPassImgui_Cleanup();
-    pkGraphicsRenderPassScene_Cleanup();
+    PkGraphicsRenderPassScene::CleanupGraphicsRenderPassScene();
 
     PkGraphicsSwapChain::CleanupGraphicsSwapChain();
     PkGraphicsCore::CleanupGraphicsCore();

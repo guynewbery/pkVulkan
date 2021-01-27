@@ -4,10 +4,16 @@
 
 #include <stdint.h>
 
-VkCommandBuffer& pkGraphicsRenderPassScene_GetCommandBuffer(uint32_t imageIndex);
+class PkGraphicsRenderPassScene
+{
+public:
+	PkGraphicsRenderPassScene() = delete;
 
-void pkGraphicsRenderPassScene_OnSwapChainCreate();
-void pkGraphicsRenderPassScene_OnSwapChainDestroy();
+	static VkCommandBuffer& GetCommandBuffer(uint32_t imageIndex);
 
-void pkGraphicsRenderPassScene_Initialise();
-void pkGraphicsRenderPassScene_Cleanup();
+	static void OnSwapChainCreate();
+	static void OnSwapChainDestroy();
+
+	static void InitialiseGraphicsRenderPassScene();
+	static void CleanupGraphicsRenderPassScene();
+};
