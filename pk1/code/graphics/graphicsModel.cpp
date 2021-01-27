@@ -26,9 +26,6 @@ namespace std
     };
 }
 
-const std::string MODEL_PATH = "data/models/viking_room.obj";
-const std::string TEXTURE_PATH = "data/textures/viking_room.png";
-
 static uint32_t s_numModels = 0;
 static VkCommandPool s_commandPool;
 
@@ -41,6 +38,9 @@ struct UniformBufferObject
 
 struct PkGraphicsModelData
 {
+    std::string modelPath = "data/models/viking_room.obj";
+    std::string texturePath = "data/textures/viking_room.png";
+
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VmaAllocation> uniformBufferAllocations;
     VkDescriptorPool descriptorPool;
@@ -470,7 +470,7 @@ static void createCommandBuffers(PkGraphicsModelData& rData, VkRenderPass render
 static void createTextureImage(PkGraphicsModelData& rData)
 {
     int texWidth, texHeight, texChannels;
-    stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    stbi_uc* pixels = stbi_load(rData.texturePath.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
     VkDeviceSize imageSize = texWidth * texHeight * 4;
     rData.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
 
@@ -597,7 +597,8 @@ static void loadModel(PkGraphicsModelData& rData)
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
 
-    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
+    if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, rData.modelPath.c_str())) 
+    {
         throw std::runtime_error(warn + err);
     }
 
@@ -777,9 +778,12 @@ void PkGraphicsModel::OnSwapChainDestroy()
     destroyUniformBuffers(*m_pData);
 }
 
-PkGraphicsModel::PkGraphicsModel()
+PkGraphicsModel::PkGraphicsModel(const char* pModelPath, const char* pTexturePath)
 {
     m_pData = new PkGraphicsModelData();
+
+    m_pData->modelPath = pModelPath;
+    m_pData->texturePath = pTexturePath;
 
     if (s_numModels == 0)
     {

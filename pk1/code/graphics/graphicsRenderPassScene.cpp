@@ -505,7 +505,7 @@ void pkGraphicsRenderPassScene_OnSwapChainDestroy()
 
 void pkGraphicsRenderPassScene_Initialise()
 {
-    s_pModel = new PkGraphicsModel();
+    s_pModel = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
     s_pGraphicsRenderPassScene = new PkGrapicsRenderPassScene();
 }
 

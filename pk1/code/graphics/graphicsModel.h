@@ -75,7 +75,8 @@ static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions
 class PkGraphicsModel
 {
 public:
-	PkGraphicsModel();
+    PkGraphicsModel() = delete;
+	PkGraphicsModel(const char* pModelPath, const char* pTexturePath);
 	~PkGraphicsModel();
 
 	void OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers);
