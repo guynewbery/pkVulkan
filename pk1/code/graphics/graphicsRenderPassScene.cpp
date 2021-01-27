@@ -13,12 +13,12 @@
 
 struct PkGrapicsRenderPassSceneData 
 {
-    VkDescriptorSetLayout m_descriptorSetLayout;
+    VkDescriptorSetLayout descriptorSetLayout;
 
-    VkRenderPass m_renderPass;
-    VkPipelineLayout m_pipelineLayout;
-    VkPipeline m_pipeline;
-    std::vector<VkFramebuffer> m_framebuffers;
+    VkRenderPass renderPass;
+    VkPipelineLayout pipelineLayout;
+    VkPipeline pipeline;
+    std::vector<VkFramebuffer> framebuffers;
 
     VkImage colourImage;
     VkImageView colourImageView;
@@ -29,16 +29,6 @@ struct PkGrapicsRenderPassSceneData
     VmaAllocation depthImageAllocation;
 
     PkGraphicsModel* pModel = nullptr;
-
-    PkGrapicsRenderPassSceneData()
-    {
-        createDescriptorSetLayout();
-    }
-
-    ~PkGrapicsRenderPassSceneData()
-    {
-        vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), m_descriptorSetLayout, nullptr);
-    }
 
     void OnSwapChainCreate()
     {
@@ -51,45 +41,17 @@ struct PkGrapicsRenderPassSceneData
 
     void OnSwapChainDestroy()
     {
-        for (VkFramebuffer framebuffer : m_framebuffers)
+        for (VkFramebuffer framebuffer : framebuffers)
         {
             vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
         }
 
-        vkDestroyPipeline(PkGraphicsCore::GetDevice(), m_pipeline, nullptr);
-        vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), m_pipelineLayout, nullptr);
-        vkDestroyRenderPass(PkGraphicsCore::GetDevice(), m_renderPass, nullptr);
+        vkDestroyPipeline(PkGraphicsCore::GetDevice(), pipeline, nullptr);
+        vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), pipelineLayout, nullptr);
+        vkDestroyRenderPass(PkGraphicsCore::GetDevice(), renderPass, nullptr);
 
         destroyDepthResources();
         destroyColourResources();
-    }
-
-    void createDescriptorSetLayout()
-    {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(PkGraphicsCore::GetDevice(), &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
     }
 
     void createColourResources()
@@ -235,7 +197,7 @@ struct PkGrapicsRenderPassSceneData
         renderPassInfo.dependencyCount = 1;
         renderPassInfo.pDependencies = &dependency;
 
-        if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS)
+        if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create render pass!");
         }
@@ -339,9 +301,9 @@ struct PkGrapicsRenderPassSceneData
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &m_descriptorSetLayout;
+        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
 
-        if (vkCreatePipelineLayout(PkGraphicsCore::GetDevice(), &pipelineLayoutInfo, nullptr, &m_pipelineLayout) != VK_SUCCESS)
+        if (vkCreatePipelineLayout(PkGraphicsCore::GetDevice(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create pipeline layout!");
         }
@@ -357,12 +319,12 @@ struct PkGrapicsRenderPassSceneData
         pipelineInfo.pMultisampleState = &multisampling;
         pipelineInfo.pDepthStencilState = &depthStencil;
         pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.layout = m_pipelineLayout;
-        pipelineInfo.renderPass = m_renderPass;
+        pipelineInfo.layout = pipelineLayout;
+        pipelineInfo.renderPass = renderPass;
         pipelineInfo.subpass = 0;
         pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        if (vkCreateGraphicsPipelines(PkGraphicsCore::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_pipeline) != VK_SUCCESS)
+        if (vkCreateGraphicsPipelines(PkGraphicsCore::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &pipeline) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create graphics pipeline!");
         }
@@ -373,7 +335,7 @@ struct PkGrapicsRenderPassSceneData
 
     void createFramebuffers() 
     {
-        m_framebuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
+        framebuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
         for (uint32_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
         {
@@ -386,14 +348,14 @@ struct PkGrapicsRenderPassSceneData
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_renderPass;
+            framebufferInfo.renderPass = renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = PkGraphicsSwapChain::GetSwapChainExtent().width;
             framebufferInfo.height = PkGraphicsSwapChain::GetSwapChainExtent().height;
             framebufferInfo.layers = 1;
 
-            if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &m_framebuffers[i]) != VK_SUCCESS)
+            if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &framebuffers[i]) != VK_SUCCESS)
             {
                 throw std::runtime_error("failed to create framebuffer!");
             }
@@ -469,6 +431,34 @@ struct PkGrapicsRenderPassSceneData
 
 static PkGrapicsRenderPassSceneData* s_pData = nullptr;
 
+void createDescriptorSetLayout(PkGrapicsRenderPassSceneData& rData)
+{
+    VkDescriptorSetLayoutBinding uboLayoutBinding{};
+    uboLayoutBinding.binding = 0;
+    uboLayoutBinding.descriptorCount = 1;
+    uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    uboLayoutBinding.pImmutableSamplers = nullptr;
+    uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+    VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+    samplerLayoutBinding.binding = 1;
+    samplerLayoutBinding.descriptorCount = 1;
+    samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    samplerLayoutBinding.pImmutableSamplers = nullptr;
+    samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+    std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+    VkDescriptorSetLayoutCreateInfo layoutInfo{};
+    layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+    layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+    layoutInfo.pBindings = bindings.data();
+
+    if (vkCreateDescriptorSetLayout(PkGraphicsCore::GetDevice(), &layoutInfo, nullptr, &rData.descriptorSetLayout) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create descriptor set layout!");
+    }
+}
+
 /*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(uint32_t imageIndex)
 {
     return s_pData->pModel->GetCommandBuffer(imageIndex);
@@ -480,11 +470,11 @@ static PkGrapicsRenderPassSceneData* s_pData = nullptr;
 
     s_pData->pModel->OnSwapChainCreate
     (
-        s_pData->m_descriptorSetLayout, 
-        s_pData->m_renderPass, 
-        s_pData->m_pipelineLayout, 
-        s_pData->m_pipeline, 
-        s_pData->m_framebuffers
+        s_pData->descriptorSetLayout, 
+        s_pData->renderPass, 
+        s_pData->pipelineLayout, 
+        s_pData->pipeline, 
+        s_pData->framebuffers
     );
 }
 
@@ -498,6 +488,8 @@ static PkGrapicsRenderPassSceneData* s_pData = nullptr;
 /*static*/ void PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene()
 {
     s_pData = new PkGrapicsRenderPassSceneData();
+    createDescriptorSetLayout(*s_pData);
+
     s_pData->pModel = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
 
     OnSwapChainCreate();
@@ -508,5 +500,7 @@ static PkGrapicsRenderPassSceneData* s_pData = nullptr;
     OnSwapChainDestroy();
 
     delete s_pData->pModel;
+
+    vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), s_pData->descriptorSetLayout, nullptr);
     delete s_pData;
 }
