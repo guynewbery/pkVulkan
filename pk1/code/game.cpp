@@ -3,9 +3,6 @@
 #include "library_macros.h"
 
 #include "graphics/graphics.h"
-#include "graphics/graphicsRenderPassImgui.h"
-#include "graphics/graphicsRenderPassScene.h"
-#include "graphics/graphicsModel.h"
 #include "camera/camera.h"
 #include "imgui/imgui.h"
 
@@ -21,8 +18,6 @@ static const uint32_t VERSION_PATCH_NUMBER = 1;
 
 struct GameData
 {
-	PkGraphicsModelViewProjection graphicsModelViewProjection;
-
 	std::chrono::time_point<std::chrono::high_resolution_clock> currentTime;
 	std::chrono::time_point<std::chrono::high_resolution_clock> lastTime;
 };
@@ -31,18 +26,18 @@ static GameData* s_pData = nullptr;
 
 static void updateGame()
 {
-	s_pData->lastTime = s_pData->currentTime;
-	s_pData->currentTime = std::chrono::high_resolution_clock::now();
-	float dt = std::chrono::duration<float, std::chrono::seconds::period>(s_pData->currentTime - s_pData->lastTime).count();
+	PkGraphics::BeginImguiFrame();
+	{
+		s_pData->lastTime = s_pData->currentTime;
+		s_pData->currentTime = std::chrono::high_resolution_clock::now();
+		float dt = std::chrono::duration<float, std::chrono::seconds::period>(s_pData->currentTime - s_pData->lastTime).count();
 
-	glfwPollEvents();
+		glfwPollEvents();
 
-	pkGraphicsRenderPassImgui_BeginFrame();
-	//ImGui::ShowDemoWindow();
-
-	pkCamera_Update(s_pData->graphicsModelViewProjection, dt);
-
-	pkGraphicsRenderPassImgui_EndFrame();
+		//ImGui::ShowDemoWindow();
+		pkCamera_Update(dt);
+	}
+	PkGraphics::EndImguiFrame();
 
 	PkGraphics::RenderAndPresentFrame();
 }
@@ -58,7 +53,7 @@ static void initialiseGame()
 
 	glfwInit();
 
-	PkGraphics::InitialiseGraphics(windowName, s_pData->graphicsModelViewProjection);
+	PkGraphics::InitialiseGraphics(windowName);
 }
 
 static void cleanupGame()

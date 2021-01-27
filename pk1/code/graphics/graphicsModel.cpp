@@ -30,7 +30,6 @@ const std::string MODEL_PATH = "data/models/viking_room.obj";
 const std::string TEXTURE_PATH = "data/textures/viking_room.png";
 
 static uint32_t s_numModels = 0;
-static PkGraphicsModelViewProjection* s_pGraphicsModelViewProjection = nullptr;
 static VkCommandPool s_commandPool;
 
 struct UniformBufferObject
@@ -740,14 +739,14 @@ static void createIndexBuffer(PkGraphicsModelData& rData)
 
 void updateUniformBuffer(PkGraphicsModelData& rData, const uint32_t imageIndex)
 {
-    float fieldOfView = s_pGraphicsModelViewProjection->fieldOfView;
+    float fieldOfView = PkGraphicsCore::GetFieldOfView();
     float aspectRatio = PkGraphicsSwapChain::GetSwapChainExtent().width / (float)PkGraphicsSwapChain::GetSwapChainExtent().height;
-    float nearViewPlane = s_pGraphicsModelViewProjection->nearViewPlane;
-    float farViewPlane = s_pGraphicsModelViewProjection->farViewPlane;
+    float nearViewPlane = PkGraphicsCore::GetNearViewPlane();
+    float farViewPlane = PkGraphicsCore::GetFarViewPlane();
 
     UniformBufferObject ubo{};
-    ubo.model = s_pGraphicsModelViewProjection->model;
-    ubo.view = s_pGraphicsModelViewProjection->view;
+    ubo.model = glm::mat4(1.0f);
+    ubo.view = PkGraphicsCore::GetViewMatrix();
     ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
     ubo.proj[1][1] *= -1;
 
@@ -778,10 +777,9 @@ void PkGraphicsModel::OnSwapChainDestroy()
     destroyUniformBuffers(*m_pData);
 }
 
-PkGraphicsModel::PkGraphicsModel(PkGraphicsModelViewProjection& rModelViewProjection)
+PkGraphicsModel::PkGraphicsModel()
 {
     m_pData = new PkGraphicsModelData();
-    s_pGraphicsModelViewProjection = &rModelViewProjection;
 
     if (s_numModels == 0)
     {
@@ -813,6 +811,5 @@ PkGraphicsModel::~PkGraphicsModel()
         vkDestroyCommandPool(PkGraphicsCore::GetDevice(), s_commandPool, nullptr);
     }
 
-    s_pGraphicsModelViewProjection = nullptr;
     delete m_pData;
 }

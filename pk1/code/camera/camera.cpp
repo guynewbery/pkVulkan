@@ -1,6 +1,6 @@
 #include "camera.h"
 
-#include "graphics/graphicsModel.h"
+#include "graphics/graphics.h"
 #include "imgui/imgui.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -39,14 +39,17 @@ static void ShowCameraUi(bool* p_open)
     ImGui::End();
 }
 
-void pkCamera_Update(PkGraphicsModelViewProjection& rModelViewProjection, float dt)
+void pkCamera_Update(float dt)
 {
 	//s_cameraRotation += dt * 10.0f;
 
     static bool show_camera_ui = true;
     ShowCameraUi(&show_camera_ui);
 
-	rModelViewProjection.model = glm::rotate(glm::mat4(1.0f), glm::radians(s_cameraRotation), glm::vec3(0.0f, 0.0f, 1.0f));
-	rModelViewProjection.view = glm::lookAt(glm::vec3(0.0f, s_camearLookAtEyeY, s_camearLookAtEyeZ), glm::vec3(0.0f, 0.0f, s_camearLookAtCentreZ), glm::vec3(0.0f, 0.0f, 1.0f));
-	rModelViewProjection.fieldOfView = s_camearFieldOfView;
+    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(s_cameraRotation), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 lookat = glm::lookAt(glm::vec3(0.0f, s_camearLookAtEyeY, s_camearLookAtEyeZ), glm::vec3(0.0f, 0.0f, s_camearLookAtCentreZ), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::mat4 view = lookat * rotation;
+
+    PkGraphics::SetViewMatrix(view);
+    PkGraphics::SetFieldOfView(s_camearFieldOfView);
 }

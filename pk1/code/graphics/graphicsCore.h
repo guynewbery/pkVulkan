@@ -2,6 +2,7 @@
 
 #include <vulkan/vulkan_core.h>
 #include <vk_mem_alloc.h>
+#include <glm/glm.hpp>
 
 struct GLFWwindow;
 
@@ -27,6 +28,15 @@ public:
     static void GetFormatProperties(VkFormat imageFormat, VkFormatProperties* formatProperties);
 
     static VkSampleCountFlagBits GetMaxMsaaSampleCount();
+
+    static glm::mat4& GetViewMatrix();
+    static void SetViewMatrix(const glm::mat4& rMat);
+
+    static float GetFieldOfView();
+    static void SetFieldOfView(const float fov);
+
+    static float GetNearViewPlane();
+    static float GetFarViewPlane();
 
     static void InitialiseGraphicsCore(const char* pWindowName);
     static void CleanupGraphicsCore();

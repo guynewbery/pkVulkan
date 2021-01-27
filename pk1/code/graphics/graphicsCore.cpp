@@ -32,6 +32,11 @@ struct PkGraphicsCoreData
 
     VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
+    float fieldOfView = 45.0f;
+    float nearViewPlane = 0.1f;
+    float farViewPlane = 100.0f;
+
     const std::vector<const char*> deviceExtensions =
     {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -417,6 +422,36 @@ static void createAllocator()
 /*static*/ VkSampleCountFlagBits PkGraphicsCore::GetMaxMsaaSampleCount()
 {
     return s_pData->msaaSamples;
+}
+
+/*static*/ glm::mat4& PkGraphicsCore::GetViewMatrix()
+{
+    return s_pData->viewMatrix;
+}
+
+/*static*/ void PkGraphicsCore::SetViewMatrix(const glm::mat4& rMat)
+{
+    s_pData->viewMatrix = rMat;
+}
+
+/*static*/ float PkGraphicsCore::GetFieldOfView()
+{
+    return s_pData->fieldOfView;
+}
+
+/*static*/ void PkGraphicsCore::SetFieldOfView(const float fov)
+{
+    s_pData->fieldOfView = fov;
+}
+
+/*static*/ float PkGraphicsCore::GetNearViewPlane()
+{
+    return 0.1f;
+}
+
+/*static*/ float PkGraphicsCore::GetFarViewPlane()
+{
+    return 100.0f;
 }
 
 /*static*/ void PkGraphicsCore::InitialiseGraphicsCore(const char* pWindowName)

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <vulkan/vulkan_core.h>
-
-struct PkGraphicsModelViewProjection;
+#include <glm/glm.hpp>
 
 class PkGraphics
 {
@@ -12,6 +11,12 @@ public:
     static bool WindowShouldClose();
     static void RenderAndPresentFrame();
 
-    static void InitialiseGraphics(const char* pWindowName, PkGraphicsModelViewProjection& rModelViewProjection);
+    static void BeginImguiFrame();
+    static void EndImguiFrame();
+
+    static void SetViewMatrix(const glm::mat4& rMat);
+    static void SetFieldOfView(const float fov);
+
+    static void InitialiseGraphics(const char* pWindowName);
     static void CleanupGraphics();
 };

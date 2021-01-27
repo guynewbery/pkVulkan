@@ -8,16 +8,6 @@
 
 struct PkGraphicsModelData;
 
-struct PkGraphicsModelViewProjection
-{
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-
-    float fieldOfView = 45.0f;
-    float nearViewPlane = 0.1f;
-    float farViewPlane = 100.0f;
-};
-
 struct InstanceData
 {
     glm::vec3 pos;
@@ -85,7 +75,7 @@ static std::array<VkVertexInputAttributeDescription, 5> getAttributeDescriptions
 class PkGraphicsModel
 {
 public:
-	PkGraphicsModel(PkGraphicsModelViewProjection& rModelViewProjection);
+	PkGraphicsModel();
 	~PkGraphicsModel();
 
 	void OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers);

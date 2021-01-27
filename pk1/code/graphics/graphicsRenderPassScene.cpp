@@ -5,6 +5,8 @@
 #include "graphics/graphicsSwapChain.h"
 #include "graphics/graphicsUtils.h"
 
+#include <glm/glm.hpp>
+
 #include <iostream>
 #include <fstream>
 
@@ -501,9 +503,9 @@ void pkGraphicsRenderPassScene_OnSwapChainDestroy()
     s_pGraphicsRenderPassScene->OnSwapChainDestroy();
 }
 
-void pkGraphicsRenderPassScene_Initialise(PkGraphicsModelViewProjection& rModelViewProjection)
+void pkGraphicsRenderPassScene_Initialise()
 {
-    s_pModel = new PkGraphicsModel(rModelViewProjection);
+    s_pModel = new PkGraphicsModel();
     s_pGraphicsRenderPassScene = new PkGrapicsRenderPassScene();
 }
 

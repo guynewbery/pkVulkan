@@ -182,14 +182,34 @@ static void recreateSwapChain()
     s_pData->currentFrame = (s_pData->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-/*static*/ void PkGraphics::InitialiseGraphics(const char* pWindowName, PkGraphicsModelViewProjection& rModelViewProjection)
+/*static*/ void PkGraphics::BeginImguiFrame()
+{
+    pkGraphicsRenderPassImgui_BeginFrame();
+}
+
+/*static*/ void PkGraphics::EndImguiFrame()
+{
+    pkGraphicsRenderPassImgui_EndFrame();
+}
+
+/*static*/ void PkGraphics::SetViewMatrix(const glm::mat4& rMat)
+{
+    PkGraphicsCore::SetViewMatrix(rMat);
+}
+
+/*static*/ void PkGraphics::SetFieldOfView(const float fov)
+{
+    PkGraphicsCore::SetFieldOfView(fov);
+}
+
+/*static*/ void PkGraphics::InitialiseGraphics(const char* pWindowName)
 {
     s_pData = new PkGraphicsData();
 
     PkGraphicsCore::InitialiseGraphicsCore(pWindowName);
     PkGraphicsSwapChain::InitialiseGraphicsSwapChain();
 
-    pkGraphicsRenderPassScene_Initialise(rModelViewProjection);
+    pkGraphicsRenderPassScene_Initialise();
     pkGraphicsRenderPassImgui_Initialise();
 
     createSyncObjects();
