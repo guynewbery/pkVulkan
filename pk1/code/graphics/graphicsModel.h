@@ -85,7 +85,7 @@ public:
     void UpdateUniformBuffer(const uint32_t imageIndex);
     void DrawModel(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, const uint32_t imageIndex);
 
-	void OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers);
+	void OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout);
 	void OnSwapChainDestroy();
 
 private:

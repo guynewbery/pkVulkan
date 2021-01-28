@@ -538,41 +538,33 @@ static void destroyFramebuffers()
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
 {
+    for (PkGraphicsModel* pModel : s_pData->pModels)
+    {
+        pModel->OnSwapChainCreate(s_pData->descriptorSetLayout);
+    }
+
     createColourResources();
     createDepthResources();
     createRenderPass();
     createPipeline();
     createFramebuffers();
-
-    for (PkGraphicsModel* pModel : s_pData->pModels)
-    {
-        pModel->OnSwapChainCreate
-        (
-            s_pData->descriptorSetLayout,
-            s_pData->renderPass,
-            s_pData->pipelineLayout,
-            s_pData->pipeline,
-            s_pData->framebuffers
-        );
-    }
-
     createCommandBuffers();
 }
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainDestroy()
 {
     vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_pData->commandPool, static_cast<uint32_t>(s_pData->commandBuffers.size()), s_pData->commandBuffers.data());
+    destroyFramebuffers();
+    destroyPipeline();
+    vkDestroyRenderPass(PkGraphicsCore::GetDevice(), s_pData->renderPass, nullptr);
+    destroyDepthResources();
+    destroyColourResources();
 
     for (PkGraphicsModel* pModel : s_pData->pModels)
     {
         pModel->OnSwapChainDestroy();
     }
 
-    destroyFramebuffers();
-    destroyPipeline();
-    vkDestroyRenderPass(PkGraphicsCore::GetDevice(), s_pData->renderPass, nullptr);
-    destroyDepthResources();
-    destroyColourResources();
 }
 
 /*static*/ void PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene()

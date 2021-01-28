@@ -679,7 +679,7 @@ void PkGraphicsModel::SetMatrix(glm::mat4& rMat)
     m_pData->matrix = rMat;
 }
 
-void PkGraphicsModel::OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers)
+void PkGraphicsModel::OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout)
 {
     createUniformBuffers(*m_pData);
     createDescriptorPool(*m_pData);
@@ -699,10 +699,11 @@ PkGraphicsModel::PkGraphicsModel(VkCommandPool commandPool, const char* pModelPa
     m_pData->modelPath = pModelPath;
     m_pData->texturePath = pTexturePath;
 
+    loadModel(*m_pData);
+    populateInstanceData(*m_pData);
+
     createTextureImage(*m_pData);
     createTextureSampler(*m_pData);
-    populateInstanceData(*m_pData);
-    loadModel(*m_pData);
     createInstanceBuffer(*m_pData);
     createVertexBuffer(*m_pData);
     createIndexBuffer(*m_pData);
