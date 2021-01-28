@@ -26,6 +26,7 @@ struct PkGraphicsCoreData
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device = VK_NULL_HANDLE;
     VmaAllocator allocator = VK_NULL_HANDLE;
+    VkCommandPool commandPool = VK_NULL_HANDLE;
 
     VkQueue graphicsQueue = VK_NULL_HANDLE;
     VkQueue presentQueue = VK_NULL_HANDLE;
@@ -359,6 +360,20 @@ static void createAllocator()
     }
 }
 
+static void createCommandPool()
+{
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_pData->physicalDevice, s_pData->surface);
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+    if (vkCreateCommandPool(s_pData->device, &poolInfo, nullptr, &s_pData->commandPool) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create graphics command pool!");
+    }
+}
+
 /*static*/ GLFWwindow* PkGraphicsCore::GetWindow()
 {
     return s_pData->pWindow;
@@ -397,6 +412,11 @@ static void createAllocator()
 /*static*/ VmaAllocator PkGraphicsCore::GetAllocator()
 {
     return s_pData->allocator;
+}
+
+/*static*/ VkCommandPool PkGraphicsCore::GetCommandPool()
+{
+    return s_pData->commandPool;
 }
 
 /*static*/ VkQueue PkGraphicsCore::GetGraphicsQueue()
@@ -469,10 +489,12 @@ static void createAllocator()
     pickPhysicalDevice();
     createLogicalDevice();
     createAllocator();
+    createCommandPool();
 }
 
 /*static*/ void PkGraphicsCore::CleanupGraphicsCore()
 {
+    vkDestroyCommandPool(s_pData->device, s_pData->commandPool, nullptr);
     vmaDestroyAllocator(s_pData->allocator);
     vkDestroyDevice(s_pData->device, nullptr);
     vkDestroySurfaceKHR(s_pData->instance, s_pData->surface, nullptr);

@@ -20,6 +20,7 @@ public:
     static VkPhysicalDevice GetPhysicalDevice();
     static VkDevice GetDevice();
     static VmaAllocator GetAllocator();
+    static VkCommandPool GetCommandPool();
 
     static VkQueue GetGraphicsQueue();
     static VkQueue GetPresentQueue();

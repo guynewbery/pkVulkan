@@ -35,8 +35,6 @@ struct UniformBufferObject
 
 struct PkGraphicsModelData
 {
-    VkCommandPool commandPool; //remove this
-
     std::string modelPath;
     std::string texturePath;
 
@@ -434,13 +432,13 @@ static void createTextureImage(PkGraphicsModelData& rData)
         rData.textureImageAllocation
     );
 
-    transitionImageLayout(rData.commandPool, rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, rData.mipLevels);
-    copyBufferToImage(rData.commandPool, stagingBuffer, rData.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    transitionImageLayout(PkGraphicsCore::GetCommandPool(), rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, rData.mipLevels);
+    copyBufferToImage(PkGraphicsCore::GetCommandPool(), stagingBuffer, rData.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
     //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 
-    generateMipmaps(rData.commandPool, rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, rData.mipLevels);
+    generateMipmaps(PkGraphicsCore::GetCommandPool(), rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, rData.mipLevels);
 }
 
 static void createTextureSampler(PkGraphicsModelData& rData)
@@ -586,7 +584,7 @@ static void createInstanceBuffer(PkGraphicsModelData& rData)
         &rData.instanceBufferAllocation
     );
 
-    copyBuffer(rData.commandPool, stagingBuffer, rData.instanceBuffer, bufferSize);
+    copyBuffer(PkGraphicsCore::GetCommandPool(), stagingBuffer, rData.instanceBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -620,7 +618,7 @@ static void createVertexBuffer(PkGraphicsModelData& rData)
         &rData.vertexBufferAllocation
     );
 
-    copyBuffer(rData.commandPool, stagingBuffer, rData.vertexBuffer, bufferSize);
+    copyBuffer(PkGraphicsCore::GetCommandPool(), stagingBuffer, rData.vertexBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -654,7 +652,7 @@ static void createIndexBuffer(PkGraphicsModelData& rData)
         &rData.indexBufferAllocation
     );
 
-    copyBuffer(rData.commandPool, stagingBuffer, rData.indexBuffer, bufferSize);
+    copyBuffer(PkGraphicsCore::GetCommandPool(), stagingBuffer, rData.indexBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -717,7 +715,6 @@ PkGraphicsModel::PkGraphicsModel(VkCommandPool commandPool, const char* pModelPa
 {
     m_pData = new PkGraphicsModelData();
 
-    m_pData->commandPool = commandPool;
     m_pData->modelPath = pModelPath;
     m_pData->texturePath = pTexturePath;
 
