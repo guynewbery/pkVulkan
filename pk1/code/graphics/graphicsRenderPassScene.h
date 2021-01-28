@@ -11,6 +11,8 @@ public:
 
 	static VkCommandBuffer& GetCommandBuffer(const uint32_t imageIndex);
 
+	static void UpdateResourceDescriptors(const uint32_t imageIndex);
+
 	static void OnSwapChainCreate();
 	static void OnSwapChainDestroy();
 

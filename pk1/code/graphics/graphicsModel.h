@@ -82,6 +82,8 @@ public:
 
     void SetMatrix(glm::mat4& rMat);
 
+    void UpdateUniformBuffer(const uint32_t imageIndex);
+
 	void OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayout, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers);
 	void OnSwapChainDestroy();
 

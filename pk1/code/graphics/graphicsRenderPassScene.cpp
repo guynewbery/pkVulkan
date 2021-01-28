@@ -469,6 +469,14 @@ static void destroyFramebuffers()
     return s_pData->pModels[0]->GetCommandBuffer(imageIndex);
 }
 
+/*static*/ void PkGraphicsRenderPassScene::UpdateResourceDescriptors(const uint32_t imageIndex)
+{
+    for (PkGraphicsModel* pModel : s_pData->pModels)
+    {
+        pModel->UpdateUniformBuffer(imageIndex);
+    }
+}
+
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
 {
     createColourResources();

@@ -726,7 +726,7 @@ static void createIndexBuffer(PkGraphicsModelData& rData)
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
 
-void updateUniformBuffer(PkGraphicsModelData& rData, const uint32_t imageIndex)
+void PkGraphicsModel::UpdateUniformBuffer(const uint32_t imageIndex)
 {
     float fieldOfView = PkGraphicsCore::GetFieldOfView();
     float aspectRatio = PkGraphicsSwapChain::GetSwapChainExtent().width / (float)PkGraphicsSwapChain::GetSwapChainExtent().height;
@@ -734,20 +734,19 @@ void updateUniformBuffer(PkGraphicsModelData& rData, const uint32_t imageIndex)
     float farViewPlane = PkGraphicsCore::GetFarViewPlane();
 
     UniformBufferObject ubo{};
-    ubo.model = rData.matrix;
+    ubo.model = m_pData->matrix;
     ubo.view = PkGraphicsCore::GetViewMatrix();
     ubo.proj = glm::perspective(glm::radians(fieldOfView), aspectRatio, nearViewPlane, farViewPlane);
     ubo.proj[1][1] *= -1;
 
     void* data;
-    vmaMapMemory(PkGraphicsCore::GetAllocator(), rData.uniformBufferAllocations[imageIndex], &data);
+    vmaMapMemory(PkGraphicsCore::GetAllocator(), m_pData->uniformBufferAllocations[imageIndex], &data);
     memcpy(data, &ubo, sizeof(ubo));
-    vmaUnmapMemory(PkGraphicsCore::GetAllocator(), rData.uniformBufferAllocations[imageIndex]);
+    vmaUnmapMemory(PkGraphicsCore::GetAllocator(), m_pData->uniformBufferAllocations[imageIndex]);
 }
 
 VkCommandBuffer& PkGraphicsModel::GetCommandBuffer(const uint32_t imageIndex)
 {
-    updateUniformBuffer(*m_pData, imageIndex);
     return m_pData->commandBuffers[imageIndex];
 }
 

@@ -124,6 +124,8 @@ static void recreateSwapChain()
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
+    PkGraphicsRenderPassScene::UpdateResourceDescriptors(imageIndex);
+
     if (s_pData->imagesInFlight[imageIndex] != VK_NULL_HANDLE)
     {
         vkWaitForFences(PkGraphicsCore::GetDevice(), 1, &s_pData->imagesInFlight[imageIndex], VK_TRUE, UINT64_MAX);
