@@ -464,14 +464,9 @@ static void destroyFramebuffers()
     }
 }
 
-/*static*/ uint32_t PkGraphicsRenderPassScene::GetNumCommandBuffers()
+/*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(uint32_t imageIndex)
 {
-    return static_cast<uint32_t>(s_pData->pModels.size());
-}
-
-/*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(const uint32_t modelIndex, const uint32_t imageIndex)
-{
-    return s_pData->pModels[modelIndex]->GetCommandBuffer(imageIndex);
+    return s_pData->pModels[0]->GetCommandBuffer(imageIndex);
 }
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
