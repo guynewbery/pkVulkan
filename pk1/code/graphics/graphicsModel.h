@@ -77,7 +77,7 @@ class PkGraphicsModel
 {
 public:
     PkGraphicsModel() = delete;
-	PkGraphicsModel(const char* pModelPath, const char* pTexturePath);
+	PkGraphicsModel(VkCommandPool commandPool, const char* pModelPath, const char* pTexturePath);
 	~PkGraphicsModel();
 
     void SetMatrix(glm::mat4& rMat);

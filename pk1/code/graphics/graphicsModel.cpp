@@ -26,9 +26,6 @@ namespace std
     };
 }
 
-static uint32_t s_numModels = 0;
-static VkCommandPool s_commandPool;
-
 struct UniformBufferObject
 {
     alignas(16) glm::mat4 model;
@@ -38,6 +35,8 @@ struct UniformBufferObject
 
 struct PkGraphicsModelData
 {
+    VkCommandPool commandPool; //remove this
+
     std::string modelPath;
     std::string texturePath;
 
@@ -45,6 +44,7 @@ struct PkGraphicsModelData
 
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VmaAllocation> uniformBufferAllocations;
+
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
     std::vector<VkCommandBuffer> commandBuffers;
@@ -68,20 +68,20 @@ struct PkGraphicsModelData
     VmaAllocation indexBufferAllocation;
 };
 
-static void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+static void copyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPool);
+    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkBufferCopy copyRegion{};
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPool, commandBuffer);
+    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
-static void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+static void copyBufferToImage(VkCommandPool commandPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPool);
+    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -96,7 +96,7 @@ static void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, ui
 
     vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPool, commandBuffer);
+    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* pBuffer, VmaAllocation* pBufferAllocation)
@@ -146,7 +146,7 @@ static void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkS
     imageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), image, format, aspectFlags, mipLevels);
 }
 
-static void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
+static void generateMipmaps(VkCommandPool commandPool, VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
 {
     // Check if image format supports linear blitting
     VkFormatProperties formatProperties;
@@ -157,7 +157,7 @@ static void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidt
         throw std::runtime_error("texture image format does not support linear blitting!");
     }
 
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPool);
+    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -233,12 +233,12 @@ static void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidt
         0, nullptr,
         1, &barrier);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPool, commandBuffer);
+    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
-static void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+static void transitionImageLayout(VkCommandPool commandPool, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_commandPool);
+    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -286,21 +286,7 @@ static void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout 
         1, &barrier
     );
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_commandPool, commandBuffer);
-}
-
-static void createCommandPool()
-{
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
-
-    VkCommandPoolCreateInfo poolInfo{};
-    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-    if (vkCreateCommandPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_commandPool) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to create graphics command pool!");
-    }
+    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void createUniformBuffers(PkGraphicsModelData& rData)
@@ -409,7 +395,7 @@ static void createCommandBuffers(PkGraphicsModelData& rData, VkRenderPass render
 
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = s_commandPool;
+    allocInfo.commandPool = rData.commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t)rData.commandBuffers.size();
 
@@ -515,13 +501,13 @@ static void createTextureImage(PkGraphicsModelData& rData)
         rData.textureImageAllocation
     );
 
-    transitionImageLayout(rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, rData.mipLevels);
-    copyBufferToImage(stagingBuffer, rData.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
+    transitionImageLayout(rData.commandPool, rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, rData.mipLevels);
+    copyBufferToImage(rData.commandPool, stagingBuffer, rData.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
     //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 
-    generateMipmaps(rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, rData.mipLevels);
+    generateMipmaps(rData.commandPool, rData.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, rData.mipLevels);
 }
 
 static void createTextureSampler(PkGraphicsModelData& rData)
@@ -667,7 +653,7 @@ static void createInstanceBuffer(PkGraphicsModelData& rData)
         &rData.instanceBufferAllocation
     );
 
-    copyBuffer(stagingBuffer, rData.instanceBuffer, bufferSize);
+    copyBuffer(rData.commandPool, stagingBuffer, rData.instanceBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -701,7 +687,7 @@ static void createVertexBuffer(PkGraphicsModelData& rData)
         &rData.vertexBufferAllocation
     );
 
-    copyBuffer(stagingBuffer, rData.vertexBuffer, bufferSize);
+    copyBuffer(rData.commandPool, stagingBuffer, rData.vertexBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -735,7 +721,7 @@ static void createIndexBuffer(PkGraphicsModelData& rData)
         &rData.indexBufferAllocation
     );
 
-    copyBuffer(stagingBuffer, rData.indexBuffer, bufferSize);
+    copyBuffer(rData.commandPool, stagingBuffer, rData.indexBuffer, bufferSize);
 
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), stagingBuffer, stagingBufferAllocation);
 }
@@ -780,23 +766,18 @@ void PkGraphicsModel::OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayou
 
 void PkGraphicsModel::OnSwapChainDestroy()
 {
-    vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_commandPool, static_cast<uint32_t>(m_pData->commandBuffers.size()), m_pData->commandBuffers.data());
+    vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), m_pData->commandPool, static_cast<uint32_t>(m_pData->commandBuffers.size()), m_pData->commandBuffers.data());
     vkDestroyDescriptorPool(PkGraphicsCore::GetDevice(), m_pData->descriptorPool, nullptr);
     destroyUniformBuffers(*m_pData);
 }
 
-PkGraphicsModel::PkGraphicsModel(const char* pModelPath, const char* pTexturePath)
+PkGraphicsModel::PkGraphicsModel(VkCommandPool commandPool, const char* pModelPath, const char* pTexturePath)
 {
     m_pData = new PkGraphicsModelData();
 
+    m_pData->commandPool = commandPool;
     m_pData->modelPath = pModelPath;
     m_pData->texturePath = pTexturePath;
-
-    if (s_numModels == 0)
-    {
-        createCommandPool();
-    }
-    s_numModels++;
 
     createTextureImage(*m_pData);
     createTextureSampler(*m_pData);
@@ -815,12 +796,6 @@ PkGraphicsModel::~PkGraphicsModel()
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), m_pData->indexBuffer, m_pData->indexBufferAllocation);
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), m_pData->vertexBuffer, m_pData->vertexBufferAllocation);
     vmaDestroyBuffer(PkGraphicsCore::GetAllocator(), m_pData->instanceBuffer, m_pData->instanceBufferAllocation);
-
-    s_numModels--;
-    if (s_numModels == 0)
-    {
-        vkDestroyCommandPool(PkGraphicsCore::GetDevice(), s_commandPool, nullptr);
-    }
 
     delete m_pData;
 }

@@ -13,6 +13,7 @@
 
 struct PkGrapicsRenderPassSceneData 
 {
+    VkCommandPool commandPool;
     VkDescriptorSetLayout descriptorSetLayout;
 
     VkRenderPass renderPass;
@@ -99,7 +100,21 @@ static std::vector<char> readFile(const std::string& filename)
     return buffer;
 }
 
-static void createDescriptorSetLayout(PkGrapicsRenderPassSceneData& rData)
+static void createCommandPool()
+{
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+    if (vkCreateCommandPool(PkGraphicsCore::GetDevice(), &poolInfo, nullptr, &s_pData->commandPool) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to create graphics command pool!");
+    }
+}
+
+static void createDescriptorSetLayout()
 {
     VkDescriptorSetLayoutBinding uboLayoutBinding{};
     uboLayoutBinding.binding = 0;
@@ -121,13 +136,13 @@ static void createDescriptorSetLayout(PkGrapicsRenderPassSceneData& rData)
     layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
     layoutInfo.pBindings = bindings.data();
 
-    if (vkCreateDescriptorSetLayout(PkGraphicsCore::GetDevice(), &layoutInfo, nullptr, &rData.descriptorSetLayout) != VK_SUCCESS)
+    if (vkCreateDescriptorSetLayout(PkGraphicsCore::GetDevice(), &layoutInfo, nullptr, &s_pData->descriptorSetLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create descriptor set layout!");
     }
 }
 
-static void createColourResources(PkGrapicsRenderPassSceneData& rData)
+static void createColourResources()
 {
     VkFormat colourFormat = PkGraphicsSwapChain::GetSwapChainImageFormat();
 
@@ -150,21 +165,21 @@ static void createColourResources(PkGrapicsRenderPassSceneData& rData)
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    if (vmaCreateImage(PkGraphicsCore::GetAllocator(), &imageInfo, &allocInfo, &rData.colourImage, &rData.colourImageAllocation, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(PkGraphicsCore::GetAllocator(), &imageInfo, &allocInfo, &s_pData->colourImage, &s_pData->colourImageAllocation, nullptr) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create buffer!");
     }
 
-    rData.colourImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), rData.colourImage, colourFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    s_pData->colourImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->colourImage, colourFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
-static void destroyColourResources(PkGrapicsRenderPassSceneData& rData)
+static void destroyColourResources()
 {
-    vkDestroyImageView(PkGraphicsCore::GetDevice(), rData.colourImageView, nullptr);
-    vmaDestroyImage(PkGraphicsCore::GetAllocator(), rData.colourImage, rData.colourImageAllocation);
+    vkDestroyImageView(PkGraphicsCore::GetDevice(), s_pData->colourImageView, nullptr);
+    vmaDestroyImage(PkGraphicsCore::GetAllocator(), s_pData->colourImage, s_pData->colourImageAllocation);
 }
 
-static void createDepthResources(PkGrapicsRenderPassSceneData& rData)
+static void createDepthResources()
 {
     VkFormat depthFormat = findDepthFormat();
 
@@ -187,21 +202,21 @@ static void createDepthResources(PkGrapicsRenderPassSceneData& rData)
     allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
     allocInfo.requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 
-    if (vmaCreateImage(PkGraphicsCore::GetAllocator(), &imageInfo, &allocInfo, &rData.depthImage, &rData.depthImageAllocation, nullptr) != VK_SUCCESS)
+    if (vmaCreateImage(PkGraphicsCore::GetAllocator(), &imageInfo, &allocInfo, &s_pData->depthImage, &s_pData->depthImageAllocation, nullptr) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create buffer!");
     }
 
-    rData.depthImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), rData.depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    s_pData->depthImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }
 
-static void destroyDepthResources(PkGrapicsRenderPassSceneData& rData)
+static void destroyDepthResources()
 {
-    vkDestroyImageView(PkGraphicsCore::GetDevice(), rData.depthImageView, nullptr);
-    vmaDestroyImage(PkGraphicsCore::GetAllocator(), rData.depthImage, rData.depthImageAllocation);
+    vkDestroyImageView(PkGraphicsCore::GetDevice(), s_pData->depthImageView, nullptr);
+    vmaDestroyImage(PkGraphicsCore::GetAllocator(), s_pData->depthImage, s_pData->depthImageAllocation);
 }
 
-static void createRenderPass(PkGrapicsRenderPassSceneData& rData)
+static void createRenderPass()
 {
     VkAttachmentDescription colorAttachment{};
     colorAttachment.format = PkGraphicsSwapChain::GetSwapChainImageFormat();
@@ -270,13 +285,13 @@ static void createRenderPass(PkGrapicsRenderPassSceneData& rData)
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &rData.renderPass) != VK_SUCCESS)
+    if (vkCreateRenderPass(PkGraphicsCore::GetDevice(), &renderPassInfo, nullptr, &s_pData->renderPass) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create render pass!");
     }
 }
 
-static void createPipeline(PkGrapicsRenderPassSceneData& rData)
+static void createPipeline()
 {
     auto vertShaderCode = readFile("data/shaders/vert.spv");
     auto fragShaderCode = readFile("data/shaders/frag.spv");
@@ -374,9 +389,9 @@ static void createPipeline(PkGrapicsRenderPassSceneData& rData)
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
     pipelineLayoutInfo.setLayoutCount = 1;
-    pipelineLayoutInfo.pSetLayouts = &rData.descriptorSetLayout;
+    pipelineLayoutInfo.pSetLayouts = &s_pData->descriptorSetLayout;
 
-    if (vkCreatePipelineLayout(PkGraphicsCore::GetDevice(), &pipelineLayoutInfo, nullptr, &rData.pipelineLayout) != VK_SUCCESS)
+    if (vkCreatePipelineLayout(PkGraphicsCore::GetDevice(), &pipelineLayoutInfo, nullptr, &s_pData->pipelineLayout) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create pipeline layout!");
     }
@@ -392,12 +407,12 @@ static void createPipeline(PkGrapicsRenderPassSceneData& rData)
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pDepthStencilState = &depthStencil;
     pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.layout = rData.pipelineLayout;
-    pipelineInfo.renderPass = rData.renderPass;
+    pipelineInfo.layout = s_pData->pipelineLayout;
+    pipelineInfo.renderPass = s_pData->renderPass;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(PkGraphicsCore::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &rData.pipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(PkGraphicsCore::GetDevice(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &s_pData->pipeline) != VK_SUCCESS)
     {
         throw std::runtime_error("failed to create graphics pipeline!");
     }
@@ -406,44 +421,44 @@ static void createPipeline(PkGrapicsRenderPassSceneData& rData)
     vkDestroyShaderModule(PkGraphicsCore::GetDevice(), vertShaderModule, nullptr);
 }
 
-static void destroyPipeline(PkGrapicsRenderPassSceneData& rData)
+static void destroyPipeline()
 {
-    vkDestroyPipeline(PkGraphicsCore::GetDevice(), rData.pipeline, nullptr);
-    vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), rData.pipelineLayout, nullptr);
+    vkDestroyPipeline(PkGraphicsCore::GetDevice(), s_pData->pipeline, nullptr);
+    vkDestroyPipelineLayout(PkGraphicsCore::GetDevice(), s_pData->pipelineLayout, nullptr);
 }
 
-static void createFramebuffers(PkGrapicsRenderPassSceneData& rData)
+static void createFramebuffers()
 {
-    rData.framebuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
+    s_pData->framebuffers.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
     for (uint32_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
         std::array<VkImageView, 3> attachments =
         {
-            rData.colourImageView,
-            rData.depthImageView,
+            s_pData->colourImageView,
+            s_pData->depthImageView,
             PkGraphicsSwapChain::GetSwapChainImageView(i)
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
         framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebufferInfo.renderPass = rData.renderPass;
+        framebufferInfo.renderPass = s_pData->renderPass;
         framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
         framebufferInfo.pAttachments = attachments.data();
         framebufferInfo.width = PkGraphicsSwapChain::GetSwapChainExtent().width;
         framebufferInfo.height = PkGraphicsSwapChain::GetSwapChainExtent().height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &rData.framebuffers[i]) != VK_SUCCESS)
+        if (vkCreateFramebuffer(PkGraphicsCore::GetDevice(), &framebufferInfo, nullptr, &s_pData->framebuffers[i]) != VK_SUCCESS)
         {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
 }
 
-static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
+static void destroyFramebuffers()
 {
-    for (VkFramebuffer framebuffer : rData.framebuffers)
+    for (VkFramebuffer framebuffer : s_pData->framebuffers)
     {
         vkDestroyFramebuffer(PkGraphicsCore::GetDevice(), framebuffer, nullptr);
     }
@@ -451,7 +466,7 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
 
 /*static*/ uint32_t PkGraphicsRenderPassScene::GetNumCommandBuffers()
 {
-    return s_pData->pModels.size();
+    return static_cast<uint32_t>(s_pData->pModels.size());
 }
 
 /*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(const uint32_t modelIndex, const uint32_t imageIndex)
@@ -461,11 +476,11 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainCreate()
 {
-    createColourResources(*s_pData);
-    createDepthResources(*s_pData);
-    createRenderPass(*s_pData);
-    createPipeline(*s_pData);
-    createFramebuffers(*s_pData);
+    createColourResources();
+    createDepthResources();
+    createRenderPass();
+    createPipeline();
+    createFramebuffers();
 
     for (PkGraphicsModel* pModel : s_pData->pModels)
     {
@@ -487,25 +502,26 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
         pModel->OnSwapChainDestroy();
     }
 
-    destroyFramebuffers(*s_pData);
-    destroyPipeline(*s_pData);
+    destroyFramebuffers();
+    destroyPipeline();
     vkDestroyRenderPass(PkGraphicsCore::GetDevice(), s_pData->renderPass, nullptr);
-    destroyDepthResources(*s_pData);
-    destroyColourResources(*s_pData);
+    destroyDepthResources();
+    destroyColourResources();
 }
 
 /*static*/ void PkGraphicsRenderPassScene::InitialiseGraphicsRenderPassScene()
 {
     s_pData = new PkGrapicsRenderPassSceneData();
-    createDescriptorSetLayout(*s_pData);
+    createCommandPool();
+    createDescriptorSetLayout();
 
     s_pData->pModels.resize(2);
 
-    s_pData->pModels[0] = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+    s_pData->pModels[0] = new PkGraphicsModel(s_pData->commandPool, "data/models/viking_room.obj", "data/textures/viking_room.png");
     glm::mat4 m0 = glm::translate(glm::mat4(1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     s_pData->pModels[0]->SetMatrix(m0);
 
-    s_pData->pModels[1] = new PkGraphicsModel("data/models/viking_room.obj", "data/textures/viking_room.png");
+    s_pData->pModels[1] = new PkGraphicsModel(s_pData->commandPool, "data/models/viking_room.obj", "data/textures/viking_room.png");
     glm::mat4 m1 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     s_pData->pModels[1]->SetMatrix(m1);
 
@@ -522,5 +538,6 @@ static void destroyFramebuffers(PkGrapicsRenderPassSceneData& rData)
     }
 
     vkDestroyDescriptorSetLayout(PkGraphicsCore::GetDevice(), s_pData->descriptorSetLayout, nullptr);
+    vkDestroyCommandPool(PkGraphicsCore::GetDevice(), s_pData->commandPool, nullptr);
     delete s_pData;
 }
