@@ -100,7 +100,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
 {
     s_pData = new PkGraphicsSwapChainData();
 
-    PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+    PkGraphicsSwapChainSupport swapChainSupport = PkGraphicsUtils::QuerySwapChainSupport(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
@@ -123,7 +123,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices indices = PkGraphicsUtils::FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily)
@@ -157,7 +157,7 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     s_pData->swapChainImageViews.resize(s_pData->swapChainImages.size());
     for (uint32_t i = 0; i < s_pData->swapChainImages.size(); i++)
     {
-        s_pData->swapChainImageViews[i] = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->swapChainImages[i], s_pData->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        s_pData->swapChainImageViews[i] = PkGraphicsUtils::CreateImageView(PkGraphicsCore::GetDevice(), s_pData->swapChainImages[i], s_pData->swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }
 }
 

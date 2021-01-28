@@ -67,18 +67,18 @@ struct PkGraphicsModelData
 
 static void copyBuffer(VkCommandPool commandPool, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
+    VkCommandBuffer commandBuffer = PkGraphicsUtils::BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkBufferCopy copyRegion{};
     copyRegion.size = size;
     vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
+    PkGraphicsUtils::EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void copyBufferToImage(VkCommandPool commandPool, VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
+    VkCommandBuffer commandBuffer = PkGraphicsUtils::BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkBufferImageCopy region{};
     region.bufferOffset = 0;
@@ -93,7 +93,7 @@ static void copyBufferToImage(VkCommandPool commandPool, VkBuffer buffer, VkImag
 
     vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
+    PkGraphicsUtils::EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer* pBuffer, VmaAllocation* pBufferAllocation)
@@ -140,7 +140,7 @@ static void createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkS
         throw std::runtime_error("failed to create buffer!");
     }
 
-    imageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), image, format, aspectFlags, mipLevels);
+    imageView = PkGraphicsUtils::CreateImageView(PkGraphicsCore::GetDevice(), image, format, aspectFlags, mipLevels);
 }
 
 static void generateMipmaps(VkCommandPool commandPool, VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels)
@@ -154,7 +154,7 @@ static void generateMipmaps(VkCommandPool commandPool, VkImage image, VkFormat i
         throw std::runtime_error("texture image format does not support linear blitting!");
     }
 
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
+    VkCommandBuffer commandBuffer = PkGraphicsUtils::BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -230,12 +230,12 @@ static void generateMipmaps(VkCommandPool commandPool, VkImage image, VkFormat i
         0, nullptr,
         1, &barrier);
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
+    PkGraphicsUtils::EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void transitionImageLayout(VkCommandPool commandPool, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
-    VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
+    VkCommandBuffer commandBuffer = PkGraphicsUtils::BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), commandPool);
 
     VkImageMemoryBarrier barrier{};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -283,7 +283,7 @@ static void transitionImageLayout(VkCommandPool commandPool, VkImage image, VkFo
         1, &barrier
     );
 
-    pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
+    PkGraphicsUtils::EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), commandPool, commandBuffer);
 }
 
 static void createUniformBuffers(PkGraphicsModelData& rData)

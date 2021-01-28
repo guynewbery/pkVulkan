@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-PkGraphicsSwapChainSupport pkGraphicsUtils_QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+/*static*/ PkGraphicsSwapChainSupport PkGraphicsUtils::QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
     PkGraphicsSwapChainSupport details;
 
@@ -29,7 +29,7 @@ PkGraphicsSwapChainSupport pkGraphicsUtils_QuerySwapChainSupport(VkPhysicalDevic
     return details;
 }
 
-PkGraphicsQueueFamilyIndices pkGraphicsUtils_FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+/*static*/ PkGraphicsQueueFamilyIndices PkGraphicsUtils::FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
 {
     PkGraphicsQueueFamilyIndices indices;
 
@@ -66,7 +66,7 @@ PkGraphicsQueueFamilyIndices pkGraphicsUtils_FindQueueFamilies(VkPhysicalDevice 
     return indices;
 }
 
-VkImageView pkGraphicsUtils_CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
+/*static*/ VkImageView PkGraphicsUtils::CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels)
 {
     VkImageViewCreateInfo viewInfo{};
     viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -88,7 +88,7 @@ VkImageView pkGraphicsUtils_CreateImageView(VkDevice device, VkImage image, VkFo
     return imageView;
 }
 
-VkCommandBuffer pkGraphicsUtils_BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool)
+/*static*/ VkCommandBuffer PkGraphicsUtils::BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool)
 {
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -108,7 +108,7 @@ VkCommandBuffer pkGraphicsUtils_BeginSingleTimeCommands(VkDevice device, VkComma
     return commandBuffer;
 }
 
-void pkGraphicsUtils_EndSingleTimeCommands(VkDevice device, VkQueue queue, VkCommandPool commandPool, VkCommandBuffer commandBuffer)
+/*static*/ void PkGraphicsUtils::EndSingleTimeCommands(VkDevice device, VkQueue queue, VkCommandPool commandPool, VkCommandBuffer commandBuffer)
 {
     vkEndCommandBuffer(commandBuffer);
 

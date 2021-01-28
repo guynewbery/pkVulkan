@@ -12,7 +12,6 @@ struct PkGraphicsSwapChainSupport
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-PkGraphicsSwapChainSupport pkGraphicsUtils_QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 
 struct PkGraphicsQueueFamilyIndices
 {
@@ -25,9 +24,16 @@ struct PkGraphicsQueueFamilyIndices
     }
 };
 
-PkGraphicsQueueFamilyIndices pkGraphicsUtils_FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+class PkGraphicsUtils
+{
+public:
+    PkGraphicsUtils() = delete;
 
-VkImageView pkGraphicsUtils_CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+    static PkGraphicsSwapChainSupport QuerySwapChainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
+    static PkGraphicsQueueFamilyIndices FindQueueFamilies(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 
-VkCommandBuffer pkGraphicsUtils_BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
-void pkGraphicsUtils_EndSingleTimeCommands(VkDevice device, VkQueue queue, VkCommandPool commandPool, VkCommandBuffer commandBuffer);
+    static VkImageView CreateImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+
+    static VkCommandBuffer BeginSingleTimeCommands(VkDevice device, VkCommandPool commandPool);
+    static void EndSingleTimeCommands(VkDevice device, VkQueue queue, VkCommandPool commandPool, VkCommandBuffer commandBuffer);
+};

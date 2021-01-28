@@ -236,14 +236,14 @@ static bool checkDeviceExtensionSupport(VkPhysicalDevice physicalDevice)
 
 static bool isDeviceSuitable(VkPhysicalDevice physicalDevice)
 {
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(physicalDevice, PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices indices = PkGraphicsUtils::FindQueueFamilies(physicalDevice, PkGraphicsCore::GetSurface());
 
     bool extensionsSupported = checkDeviceExtensionSupport(physicalDevice);
 
     bool swapChainAdequate = false;
     if (extensionsSupported)
     {
-        PkGraphicsSwapChainSupport swapChainSupport = pkGraphicsUtils_QuerySwapChainSupport(physicalDevice, PkGraphicsCore::GetSurface());
+        PkGraphicsSwapChainSupport swapChainSupport = PkGraphicsUtils::QuerySwapChainSupport(physicalDevice, PkGraphicsCore::GetSurface());
         swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
     }
 
@@ -300,7 +300,7 @@ static void pickPhysicalDevice()
 
 static void createLogicalDevice()
 {
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(s_pData->physicalDevice, PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices indices = PkGraphicsUtils::FindQueueFamilies(s_pData->physicalDevice, PkGraphicsCore::GetSurface());
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<uint32_t> uniqueQueueFamilies = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -362,7 +362,7 @@ static void createAllocator()
 
 static void createCommandPool()
 {
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(s_pData->physicalDevice, s_pData->surface);
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = PkGraphicsUtils::FindQueueFamilies(s_pData->physicalDevice, s_pData->surface);
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;

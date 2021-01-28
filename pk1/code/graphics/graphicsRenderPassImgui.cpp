@@ -39,7 +39,7 @@ static void createCommandPools()
 {
     s_pData->commandPools.resize(PkGraphicsSwapChain::GetNumSwapChainImages());
 
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = PkGraphicsUtils::FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     for (size_t i = 0; i < PkGraphicsSwapChain::GetNumSwapChainImages(); i++)
     {
@@ -296,7 +296,7 @@ static void destroyCommandBuffers()
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
-    PkGraphicsQueueFamilyIndices indices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices indices = PkGraphicsUtils::FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     createCommandPools();
     createDescriptorPool();
@@ -336,9 +336,9 @@ static void destroyCommandBuffers()
 
     // Upload Fonts
     {
-        VkCommandBuffer commandBuffer = pkGraphicsUtils_BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_pData->commandPools[0]);
+        VkCommandBuffer commandBuffer = PkGraphicsUtils::BeginSingleTimeCommands(PkGraphicsCore::GetDevice(), s_pData->commandPools[0]);
         ImGui_ImplVulkan_CreateFontsTexture(commandBuffer);
-        pkGraphicsUtils_EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_pData->commandPools[0], commandBuffer);
+        PkGraphicsUtils::EndSingleTimeCommands(PkGraphicsCore::GetDevice(), PkGraphicsCore::GetGraphicsQueue(), s_pData->commandPools[0], commandBuffer);
 
         ImGui_ImplVulkan_DestroyFontUploadObjects();
     }

@@ -104,7 +104,7 @@ static std::vector<char> readFile(const std::string& filename)
 
 static void createCommandPool()
 {
-    PkGraphicsQueueFamilyIndices queueFamilyIndices = pkGraphicsUtils_FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
+    PkGraphicsQueueFamilyIndices queueFamilyIndices = PkGraphicsUtils::FindQueueFamilies(PkGraphicsCore::GetPhysicalDevice(), PkGraphicsCore::GetSurface());
 
     VkCommandPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -172,7 +172,7 @@ static void createColourResources()
         throw std::runtime_error("failed to create buffer!");
     }
 
-    s_pData->colourImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->colourImage, colourFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    s_pData->colourImageView = PkGraphicsUtils::CreateImageView(PkGraphicsCore::GetDevice(), s_pData->colourImage, colourFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 }
 
 static void destroyColourResources()
@@ -209,7 +209,7 @@ static void createDepthResources()
         throw std::runtime_error("failed to create buffer!");
     }
 
-    s_pData->depthImageView = pkGraphicsUtils_CreateImageView(PkGraphicsCore::GetDevice(), s_pData->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
+    s_pData->depthImageView = PkGraphicsUtils::CreateImageView(PkGraphicsCore::GetDevice(), s_pData->depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }
 
 static void destroyDepthResources()
