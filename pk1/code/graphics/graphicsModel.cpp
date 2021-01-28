@@ -47,7 +47,6 @@ struct PkGraphicsModelData
 
     VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
-    std::vector<VkCommandBuffer> commandBuffers;
 
     VkImage textureImage;
     VkImageView textureImageView;
@@ -389,72 +388,6 @@ static void createDescriptorSets(PkGraphicsModelData& rData, VkDescriptorSetLayo
     }
 }
 
-static void createCommandBuffers(PkGraphicsModelData& rData, VkRenderPass renderPass, VkPipelineLayout pipelineLayout, VkPipeline pipeline, std::vector<VkFramebuffer>& rFramebuffers)
-{
-    rData.commandBuffers.resize(rFramebuffers.size());
-
-    VkCommandBufferAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = rData.commandPool;
-    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = (uint32_t)rData.commandBuffers.size();
-
-    if (vkAllocateCommandBuffers(PkGraphicsCore::GetDevice(), &allocInfo, rData.commandBuffers.data()) != VK_SUCCESS)
-    {
-        throw std::runtime_error("failed to allocate command buffers!");
-    }
-
-    for (size_t i = 0; i < rData.commandBuffers.size(); i++)
-    {
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-        if (vkBeginCommandBuffer(rData.commandBuffers[i], &beginInfo) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to begin recording command buffer!");
-        }
-
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPass;
-        renderPassInfo.framebuffer = rFramebuffers[i];
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = PkGraphicsSwapChain::GetSwapChainExtent();
-
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-        clearValues[1].depthStencil = { 1.0f, 0 };
-
-        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(rData.commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        vkCmdBindPipeline(rData.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-        VkBuffer vertexBuffers[] = { rData.vertexBuffer };
-        VkDeviceSize vertexOffsets[] = { 0 };
-        vkCmdBindVertexBuffers(rData.commandBuffers[i], 0, 1, vertexBuffers, vertexOffsets);
-
-        VkBuffer instanceBuffers[] = { rData.instanceBuffer };
-        VkDeviceSize instanceOffsets[] = { 0 };
-        vkCmdBindVertexBuffers(rData.commandBuffers[i], 1, 1, instanceBuffers, instanceOffsets);
-
-        vkCmdBindIndexBuffer(rData.commandBuffers[i], rData.indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-        vkCmdBindDescriptorSets(rData.commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &rData.descriptorSets[i], 0, nullptr);
-
-        vkCmdDrawIndexed(rData.commandBuffers[i], static_cast<uint32_t>(rData.indices.size()), static_cast<uint32_t>(rData.instances.size()), 0, 0, 0);
-
-        vkCmdEndRenderPass(rData.commandBuffers[i]);
-
-        if (vkEndCommandBuffer(rData.commandBuffers[i]) != VK_SUCCESS)
-        {
-            throw std::runtime_error("failed to record command buffer!");
-        }
-    }
-}
-
 static void createTextureImage(PkGraphicsModelData& rData)
 {
     int texWidth, texHeight, texChannels;
@@ -745,9 +678,21 @@ void PkGraphicsModel::UpdateUniformBuffer(const uint32_t imageIndex)
     vmaUnmapMemory(PkGraphicsCore::GetAllocator(), m_pData->uniformBufferAllocations[imageIndex]);
 }
 
-VkCommandBuffer& PkGraphicsModel::GetCommandBuffer(const uint32_t imageIndex)
+void PkGraphicsModel::DrawModel(VkCommandBuffer commandBuffer, VkPipelineLayout pipelineLayout, const uint32_t imageIndex)
 {
-    return m_pData->commandBuffers[imageIndex];
+    VkBuffer vertexBuffers[] = { m_pData->vertexBuffer };
+    VkDeviceSize vertexOffsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, vertexOffsets);
+
+    VkBuffer instanceBuffers[] = { m_pData->instanceBuffer };
+    VkDeviceSize instanceOffsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 1, 1, instanceBuffers, instanceOffsets);
+
+    vkCmdBindIndexBuffer(commandBuffer, m_pData->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout, 0, 1, &m_pData->descriptorSets[imageIndex], 0, nullptr);
+
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_pData->indices.size()), static_cast<uint32_t>(m_pData->instances.size()), 0, 0, 0);
 }
 
 void PkGraphicsModel::SetMatrix(glm::mat4& rMat)
@@ -760,12 +705,10 @@ void PkGraphicsModel::OnSwapChainCreate(VkDescriptorSetLayout descriptorSetLayou
     createUniformBuffers(*m_pData);
     createDescriptorPool(*m_pData);
     createDescriptorSets(*m_pData, descriptorSetLayout);
-    createCommandBuffers(*m_pData, renderPass, pipelineLayout, pipeline, rFramebuffers);
 }
 
 void PkGraphicsModel::OnSwapChainDestroy()
 {
-    vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), m_pData->commandPool, static_cast<uint32_t>(m_pData->commandBuffers.size()), m_pData->commandBuffers.data());
     vkDestroyDescriptorPool(PkGraphicsCore::GetDevice(), m_pData->descriptorPool, nullptr);
     destroyUniformBuffers(*m_pData);
 }

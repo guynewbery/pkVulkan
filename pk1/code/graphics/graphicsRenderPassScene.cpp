@@ -14,6 +14,8 @@
 struct PkGrapicsRenderPassSceneData 
 {
     VkCommandPool commandPool;
+    std::vector<VkCommandBuffer> commandBuffers;
+
     VkDescriptorSetLayout descriptorSetLayout;
 
     VkRenderPass renderPass;
@@ -456,6 +458,63 @@ static void createFramebuffers()
     }
 }
 
+static void createCommandBuffers()
+{
+    s_pData->commandBuffers.resize(s_pData->framebuffers.size());
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = s_pData->commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = (uint32_t)s_pData->commandBuffers.size();
+
+    if (vkAllocateCommandBuffers(PkGraphicsCore::GetDevice(), &allocInfo, s_pData->commandBuffers.data()) != VK_SUCCESS)
+    {
+        throw std::runtime_error("failed to allocate command buffers!");
+    }
+
+    for (size_t i = 0; i < s_pData->commandBuffers.size(); i++)
+    {
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+        if (vkBeginCommandBuffer(s_pData->commandBuffers[i], &beginInfo) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = s_pData->renderPass;
+        renderPassInfo.framebuffer = s_pData->framebuffers[i];
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = PkGraphicsSwapChain::GetSwapChainExtent();
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+        vkCmdBeginRenderPass(s_pData->commandBuffers[i], &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdBindPipeline(s_pData->commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, s_pData->pipeline);
+
+        for (PkGraphicsModel* pModel : s_pData->pModels)
+        {
+            pModel->DrawModel(s_pData->commandBuffers[i], s_pData->pipelineLayout, static_cast<uint32_t>(i));
+        }
+
+        vkCmdEndRenderPass(s_pData->commandBuffers[i]);
+
+        if (vkEndCommandBuffer(s_pData->commandBuffers[i]) != VK_SUCCESS)
+        {
+            throw std::runtime_error("failed to record command buffer!");
+        }
+    }
+}
+
 static void destroyFramebuffers()
 {
     for (VkFramebuffer framebuffer : s_pData->framebuffers)
@@ -466,7 +525,7 @@ static void destroyFramebuffers()
 
 /*static*/ VkCommandBuffer& PkGraphicsRenderPassScene::GetCommandBuffer(uint32_t imageIndex)
 {
-    return s_pData->pModels[0]->GetCommandBuffer(imageIndex);
+    return s_pData->commandBuffers[imageIndex];
 }
 
 /*static*/ void PkGraphicsRenderPassScene::UpdateResourceDescriptors(const uint32_t imageIndex)
@@ -496,10 +555,14 @@ static void destroyFramebuffers()
             s_pData->framebuffers
         );
     }
+
+    createCommandBuffers();
 }
 
 /*static*/ void PkGraphicsRenderPassScene::OnSwapChainDestroy()
 {
+    vkFreeCommandBuffers(PkGraphicsCore::GetDevice(), s_pData->commandPool, static_cast<uint32_t>(s_pData->commandBuffers.size()), s_pData->commandBuffers.data());
+
     for (PkGraphicsModel* pModel : s_pData->pModels)
     {
         pModel->OnSwapChainDestroy();
